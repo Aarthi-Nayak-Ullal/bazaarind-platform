@@ -16,9 +16,9 @@ const FlipkartLogin = ({ onClose, onLoginSuccess }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = response.json();
+      const data = await response.json();
       if (response.ok) {
-        onLoginSuccess(data.user);
+        if (onLoginSuccess) onLoginSuccess(data.user);
         if (onClose) onClose();
       } else {
         setError(data.detail || "Authentication validation denied.");
@@ -31,7 +31,7 @@ const FlipkartLogin = ({ onClose, onLoginSuccess }) => {
   return (
     <div style={styles.modalOverlay}>
       <div style={styles.loginContainer}>
-        {/* 📘 LEFT COLUMN: The Iconic Flipkart Brand Pane */}
+        {/* 📘 LEFT COLUMN: The Flipkart Brand Pane */}
         <div style={styles.leftBrandPane}>
           <div>
             <h2 style={styles.brandTitle}>Login</h2>
@@ -42,7 +42,7 @@ const FlipkartLogin = ({ onClose, onLoginSuccess }) => {
           <div style={styles.brandGraphicPlaceholder}>BazaarInd</div>
         </div>
 
-        {/* ✉️ RIGHT COLUMN: The Interactive Form Input Matrix */}
+        {/* ✉️ RIGHT COLUMN: Input Matrix */}
         <div style={styles.rightFormPane}>
           <button onClick={onClose} style={styles.closeModalButton}>✕</button>
           
@@ -87,7 +87,6 @@ const FlipkartLogin = ({ onClose, onLoginSuccess }) => {
   );
 };
 
-// 🎨 COMPREHENSIVE FLIPKART DESIGN BRANDING OBJECT SPECIFICATIONS
 const styles = {
   modalOverlay: {
     position: "fixed",
@@ -114,7 +113,7 @@ const styles = {
   },
   leftBrandPane: {
     width: "40%",
-    backgroundColor: "#2874F0", // Iconic Flipkart Royal Blue
+    backgroundColor: "#2874F0",
     padding: "40px 33px",
     display: "flex",
     flexDirection: "column",
@@ -181,7 +180,6 @@ const styles = {
     fontSize: "16px",
     padding: "8px 0",
     color: "#000000",
-    transition: "border-color 0.2s",
   },
   termsText: {
     fontSize: "12px",
@@ -195,7 +193,7 @@ const styles = {
     fontWeight: "500",
   },
   flipkartOrangeButton: {
-    backgroundColor: "#FB641B", // Iconic Flipkart Tangerine Orange
+    backgroundColor: "#FB641B",
     color: "#ffffff",
     border: "none",
     width: "100%",
