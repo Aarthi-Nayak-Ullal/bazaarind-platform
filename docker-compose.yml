@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. NoSQL Storage Container Cluster Node
+  mongo:
+    image: mongo:latest
+    container_name: bazaarind_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - bazaarind_net
+
+  # 2. Asynchronous API Processing Core Node
+  backend:
+    build: ./backend
+    container_name: bazaarind_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+    depends_on:
+      - mongo
+    networks:
+      - bazaarind_net
+
+  # 3. Presenter User Interface Node
+  frontend:
+    build: ./frontend
+    container_name: bazaarind_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    stdin_open: true
+    tty: true
+    networks:
+      - bazaarind_net
+
+# Create persistent named volume mappings to protect database records across reboots
+volumes:
+  mongo_data:
+
+# Initialize a clean shared local network bus
+networks:
+  bazaarind_net:
+    driver: bridge
