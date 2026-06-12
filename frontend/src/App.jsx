@@ -20,7 +20,7 @@ function App() {
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' })
   const [authError, setAuthError] = useState('')
   
-  // 📜 Flipkart-Style Legal View Tracking Matrix ('none', 'terms', 'privacy')
+  // Flipkart-Style Legal View Tracking Matrix ('none', 'terms', 'privacy')
   const [legalView, setLegalView] = useState('none')
 
   // Transaction Flight Modals
@@ -33,17 +33,35 @@ function App() {
   const [activeBanner, setActiveBanner] = useState(0)
   const promoBanners = [
     { 
-      title: "CYBER ELECTRONICS ENGINE SALE", 
-      sub: "Flat 60% Off Automated Audio Gear & Hardware Kits", 
+      title: "EXCLUSIVE DEALS FOR YOU", 
+      sub: "Flat 10% Off Up to ₹100 Coupon Applied Automatically", 
       img: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1200&q=80", 
-      gradient: "linear-gradient(90deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.5) 100%)" 
+      gradient: "linear-gradient(90deg, rgba(40,116,240,0.9) 0%, rgba(15,23,42,0.4) 100%)" 
     },
     { 
-      title: "MIDNIGHT GROCERY SUPPLY RUN", 
-      sub: "Flat ₹100 Cashback on Daily Staples & Processing Essentials", 
-      img: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&w=1200&q=80", 
-      gradient: "linear-gradient(90deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.5) 100%)" 
+      title: "JUNE EPIC HIGH-HARDWARE SALE", 
+      sub: "Flat 60% Off Premium Audio Kits & Smart Wearable Components", 
+      img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", 
+      gradient: "linear-gradient(90deg, rgba(251,100,27,0.9) 0%, rgba(15,23,42,0.4) 100%)" 
+    },
+    { 
+      title: "SMARTEST SUMMER ECO DEALS", 
+      sub: "Power every step with upgraded processing and storage cells", 
+      img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80", 
+      gradient: "linear-gradient(90deg, rgba(16,185,129,0.9) 0%, rgba(15,23,42,0.4) 100%)" 
     }
+  ]
+
+  // 🏷️ FLIPKART STYLE ICON BAR DEFINITIONS
+  const categoryIcons = [
+    { name: 'All', icon: '✨' },
+    { name: 'Electronics', icon: '📱' },
+    { name: 'Home & Kitchen', icon: '🍳' },
+    { name: 'Groceries', icon: '🍏' },
+    { name: 'Apparel', icon: '👔' },
+    { name: 'Fitness & Lifestyle', icon: '🏋️‍♂️' },
+    { name: 'Footwear', icon: '👟' },
+    { name: 'Books & Stationery', icon: '📚' }
   ]
 
   // Pure Component Fallback Registers (CORS Security Mitigation)
@@ -68,7 +86,7 @@ function App() {
     setDeliveryDateString(targetArrival.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
   }, [])
 
-  // Auto-advance loop for promotional banner array
+  // Auto-advance loop for sliding banner array
   useEffect(() => {
     if (currentView === 'home') {
       const bannerTimer = setInterval(() => {
@@ -76,12 +94,19 @@ function App() {
       }, 5000)
       return () => clearInterval(bannerTimer)
     }
-  }, [currentView])
+  }, [currentView, promoBanners.length])
 
-  // Cold Boot User Register Synchronization with Live Render API
+  // 🎯 COLD BOOT: Auto-trigger popup landing modal instantly on link open if guest
   useEffect(() => {
     const savedUser = localStorage.getItem('bazaarUser')
-    if (savedUser) setUser(JSON.parse(savedUser))
+    if (savedUser) {
+      setUser(JSON.parse(savedUser))
+    } else {
+      // User identity registry absent -> Throw open Flipkart Login interlock modal immediately!
+      setShowAuthModal(true)
+      setIsSignUp(false)
+      setLegalView('none')
+    }
 
     fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
@@ -169,7 +194,7 @@ function App() {
           
           <input 
             type="text" 
-            placeholder="Search verified hardware inventory..." 
+            placeholder="Search for Products, Brands and More..." 
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); if(currentView !== 'catalog') setCurrentView('catalog'); }}
             style={{ width: '400px', padding: '10px 16px', backgroundColor: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '4px', outline: 'none', fontSize: '14px', color: theme.textPrimary }} 
@@ -191,29 +216,65 @@ function App() {
         </div>
       </nav>
 
-      {/* 2. CATEGORY DISPATCH LINKS */}
-      <div style={{ backgroundColor: theme.panel, display: 'flex', justifyContent: 'center', gap: '35px', padding: '12px 0', borderBottom: `1px solid ${theme.border}`, fontSize: '13px', fontWeight: '600' }}>
-        {['All', 'Electronics', 'Home & Kitchen', 'Groceries', 'Apparel', 'Fitness & Lifestyle', 'Footwear', 'Books & Stationery'].map(cat => (
-          <span key={cat} onClick={() => { setSelectedCategory(cat); setCurrentView('catalog'); }} style={{ cursor: 'pointer', transition: 'color 0.1s', color: (selectedCategory === cat && currentView === 'catalog') ? theme.accent : theme.textSecondary }}>
-            {cat.toUpperCase()}
-          </span>
-        ))}
+      {/* 2. 🌟 NEW FLIPKART STYLE PREMIUM VISUAL ICON NAVIGATION STRIP */}
+      <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        {categoryIcons.map(cat => {
+          const isActive = selectedCategory === cat.name && currentView === 'catalog';
+          return (
+            <div 
+              key={cat.name} 
+              onClick={() => { setSelectedCategory(cat.name); setCurrentView('catalog'); }} 
+              className="category-icon-node"
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}
+            >
+              <span style={{ fontSize: '24px', marginBottom: '5px', filter: isActive ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))' : 'none' }}>{cat.icon}</span>
+              <span style={{ fontSize: '12px', fontWeight: 'bold', color: isActive ? '#2874F0' : '#444444', textTransform: 'capitalize' }}>
+                {cat.name}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* 3. CORE VIEWPORT ROUTER */}
       {currentView === 'home' && (
-        <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          <div style={{ 
-            backgroundImage: `${promoBanners[activeBanner].gradient}, url("${promoBanners[activeBanner].img}")`, 
-            backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', height: '280px', borderRadius: '6px', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${theme.border}`, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)'
-          }}>
-            <span style={{ backgroundColor: theme.accent, width: 'fit-content', padding: '3px 10px', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', letterSpacing: '1px' }}>SYSTEM DISCOUNTS</span>
-            <h2 style={{ fontSize: '30px', margin: '0 0 8px 0', fontWeight: '900', color: theme.textPrimary }}>{promoBanners[activeBanner].title}</h2>
-            <p style={{ fontSize: '16px', margin: '0 0 20px 0', color: theme.textSecondary }}>{promoBanners[activeBanner].sub}</p>
-            <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>ENGAGE INFRASTRUCTURE</button>
+        <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '35px' }}>
+          
+          {/* 🎬 ANIMATED SLIDING CAROUSEL CONTAINER (Matches Flipkart Animation Architecture) */}
+          <div style={{ width: '100%', overflow: 'hidden', borderRadius: '4px', border: `1px solid ${theme.border}`, boxShadow: '0 4px 15px rgba(0,0,0,0.5)', position: 'relative', height: '280px' }}>
+            
+            {/* The Horizontal Sliding Track */}
+            <div style={{ display: 'flex', width: `${promoBanners.length * 100}%`, height: '100%', transform: `translateX(-${activeBanner * (100 / promoBanners.length)}%)`, transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+              {promoBanners.map((banner, index) => (
+                <div 
+                  key={index} 
+                  style={{ 
+                    width: `${100 / promoBanners.length}%`, height: '100%', backgroundImage: `${banner.gradient}, url("${banner.img}")`, 
+                    backgroundSize: 'cover', backgroundPosition: 'center', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box'
+                  }}
+                >
+                  <span style={{ backgroundColor: '#FB641B', width: 'fit-content', padding: '4px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', letterSpacing: '1px', color: '#fff' }}>FLIPKART OFFER MODE</span>
+                  <h2 style={{ fontSize: '34px', margin: '0 0 8px 0', fontWeight: '900', color: '#ffffff', textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>{banner.title}</h2>
+                  <p style={{ fontSize: '16px', margin: '0 0 24px 0', color: '#e0e0e0', fontWeight: '500' }}>{banner.sub}</p>
+                  <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '12px 35px', backgroundColor: '#2874F0', color: '#ffffff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.2)', textTransform: 'uppercase' }}>Shop Now</button>
+                </div>
+              ))}
+            </div>
+
+            {/* Carousel Index Indicator Dots */}
+            <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '8px', zIndex: 10 }}>
+              {promoBanners.map((_, idx) => (
+                <div 
+                  key={idx} 
+                  onClick={() => setActiveBanner(idx)}
+                  style={{ width: '9px', height: '9px', borderRadius: '50%', backgroundColor: activeBanner === idx ? '#2874F0' : '#ffffff', opacity: activeBanner === idx ? 1 : 0.5, cursor: 'pointer', transition: 'all 0.3s ease' }}
+                />
+              ))}
+            </div>
           </div>
 
-          <div style={{ backgroundColor: theme.panel, padding: '24px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
+          {/* Recommendations Catalog Row */}
+          <div style={{ backgroundColor: theme.panel, padding: '24px', borderRadius: '4px', border: `1px solid ${theme.border}` }}>
             <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: theme.textPrimary }}>Algorithmic Core Recommendations 🔥</h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: theme.textSecondary }}>High-density records verified for sudden volume markdown routing.</p>
             
