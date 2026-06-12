@@ -19,6 +19,9 @@ function App() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' })
   const [authError, setAuthError] = useState('')
+  
+  // 📜 Flipkart-Style Legal View Tracking Matrix ('none', 'terms', 'privacy')
+  const [legalView, setLegalView] = useState('none')
 
   // Transaction Flight Modals
   const [showCartModal, setShowCartModal] = useState(false)
@@ -122,6 +125,7 @@ function App() {
       localStorage.setItem('bazaarUser', JSON.stringify(data.user))
       setShowAuthModal(false)
       setAuthForm({ name: '', email: '', password: '' })
+      setLegalView('none')
     } catch (err) {
       setAuthError(err.message)
     }
@@ -142,15 +146,14 @@ function App() {
   const removeFromCart = (idx) => setCart(cart.filter((_, i) => i !== idx))
   const calculateTotal = () => cart.reduce((sum, item) => sum + item.price, 0)
 
-  // UNIVERSAL DESIGN PALETTE: Slate Cyber-Dark Scheme variables
   const theme = {
-    bg: '#0f172a',        // Deep Slate 900
-    panel: '#1e293b',     // Mid Slate 800
-    border: '#334155',    // Light Slate 700
-    textPrimary: '#f8fafc',// Silver White
-    textSecondary: '#94a3b8',// Muted Slate Blue
-    accent: '#f97316',    // Safety Alert Orange
-    action: '#10b981'     // Transaction Success Green
+    bg: '#0f172a',        
+    panel: '#1e293b',     
+    border: '#334155',    
+    textPrimary: '#f8fafc',
+    textSecondary: '#94a3b8',
+    accent: '#f97316',    
+    action: '#10b981'     
   }
 
   return (
@@ -180,7 +183,7 @@ function App() {
               <button onClick={() => { localStorage.removeItem('bazaarUser'); setUser(null); setCurrentView('home'); }} style={{ background: 'none', border: `1px solid ${theme.accent}`, color: theme.accent, padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Disconnect</button>
             </div>
           ) : (
-            <button onClick={() => { setShowAuthModal(true); setIsSignUp(false); }} style={{ backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', padding: '8px 26px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>Login</button>
+            <button onClick={() => { setShowAuthModal(true); setIsSignUp(false); setLegalView('none'); }} style={{ backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', padding: '8px 26px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>Login</button>
           )}
           <div onClick={() => setShowCartModal(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '4px', backgroundColor: theme.bg, border: `1px solid ${theme.border}` }}>
             <span>🛒</span> Buffer <span style={{ backgroundColor: theme.accent, color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '12px' }}>{cart.length}</span>
@@ -197,7 +200,7 @@ function App() {
         ))}
       </div>
 
-      {/* 3. CORE VIEWPORT SWAPPER ROUTER */}
+      {/* 3. CORE VIEWPORT ROUTER */}
       {currentView === 'home' && (
         <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           <div style={{ 
@@ -375,17 +378,21 @@ function App() {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
           <div style={{ width: '650px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
             
-            {/* Close Button Matrix */}
-            <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '18px', color: '#878787', cursor: 'pointer', zIndex: 10 }}>✕</button>
+            {/* Close Modal Triggers */}
+            <button onClick={() => { setShowAuthModal(false); setLegalView('none'); }} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '18px', color: '#878787', cursor: 'pointer', zIndex: 10 }}>✕</button>
             
             {/* Left Column: Iconic Brand Pane */}
-            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#ffffff' }}>
+            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', color: '#ffffff' }}>
               <div>
                 <h2 style={{ fontSize: '28px', fontWeight: '500', margin: '0 0 16px 0' }}>
-                  {isSignUp ? "Sign Up" : "Login"}
+                  {legalView === 'terms' ? "Terms of Use" : legalView === 'privacy' ? "Privacy" : isSignUp ? "Sign Up" : "Login"}
                 </h2>
                 <p style={{ fontSize: '15px', lineHeight: '1.5', color: '#dbdbdb', margin: 0 }}>
-                  {isSignUp 
+                  {legalView === 'terms' 
+                    ? "Review the operating regulations and marketplace transaction policies allocated for your interface."
+                    : legalView === 'privacy'
+                    ? "Understand how credential tracking streams and security configurations are handled on the platform."
+                    : isSignUp 
                     ? "Create an operator credentials packet to manage your hardware preferences seamlessly." 
                     : "Get access to your Orders, Wishlist and Recommendations"}
                 </p>
@@ -393,61 +400,113 @@ function App() {
               <div style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '1px', opacity: 0.3, textAlign: 'center' }}>BazaarInd</div>
             </div>
 
-            {/* Right Column: Interactive Form Field Matrix */}
-            <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '56px 35px 16px 35px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
-              {authError && (
-                <div style={{ backgroundColor: '#ffeae9', color: '#d32f2f', padding: '10px', borderRadius: '4px', fontSize: '13px', marginBottom: '15px', border: '1px solid #f4c7c3' }}>
-                  {authError}
-                </div>
-              )}
-              
-              {isSignUp && (
+            {/* Right Column Context Swapper: Renders Form or Legal Documentation View */}
+            {legalView === 'none' ? (
+              <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '56px 35px 16px 35px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
+                {authError && (
+                  <div style={{ backgroundColor: '#ffeae9', color: '#d32f2f', padding: '10px', borderRadius: '4px', fontSize: '13px', marginBottom: '15px', border: '1px solid #f4c7c3' }}>
+                    {authError}
+                  </div>
+                )}
+                
+                {isSignUp && (
+                  <div style={{ marginBottom: '30px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Enter Full Name" 
+                      required 
+                      value={authForm.name} 
+                      onChange={(e) => setAuthForm({...authForm, name: e.target.value})} 
+                      style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
+                    />
+                  </div>
+                )}
+
                 <div style={{ marginBottom: '30px' }}>
                   <input 
-                    type="text" 
-                    placeholder="Enter Full Name" 
+                    type="email" 
+                    placeholder="Enter Email Address" 
                     required 
-                    value={authForm.name} 
-                    onChange={(e) => setAuthForm({...authForm, name: e.target.value})} 
+                    value={authForm.email} 
+                    onChange={(e) => setAuthForm({...authForm, email: e.target.value})} 
                     style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
                   />
                 </div>
-              )}
 
-              <div style={{ marginBottom: '30px' }}>
-                <input 
-                  type="email" 
-                  placeholder="Enter Email Address" 
-                  required 
-                  value={authForm.email} 
-                  onChange={(e) => setAuthForm({...authForm, email: e.target.value})} 
-                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
-                />
+                <div style={{ marginBottom: '30px' }}>
+                  <input 
+                    type="password" 
+                    placeholder="Enter Password" 
+                    required 
+                    value={authForm.password} 
+                    onChange={(e) => setAuthForm({...authForm, password: e.target.value})} 
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
+                  />
+                </div>
+
+                <p style={{ fontSize: '12px', color: '#878787', lineHeight: '1.4', margin: '0 0 24px 0' }}>
+                  By continuing, you agree to BazaarInd's{" "}
+                  <span onClick={() => setLegalView('terms')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}>Terms of Use</span> and{" "}
+                  <span onClick={() => setLegalView('privacy')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '500', textDecoration: 'underline' }}>Privacy Policy</span>.
+                </p>
+
+                <button type="submit" style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '48px', borderRadius: '2px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.2)', textTransform: 'uppercase' }}>
+                  {isSignUp ? "Continue to Signup" : "Log In"}
+                </button>
+
+                <p onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ color: '#2874F0', fontSize: '14px', textAlign: 'center', cursor: 'pointer', marginTop: '35px', fontWeight: '500' }}>
+                  {isSignUp ? "Existing User? Log in to your channel" : "New to BazaarInd? Create an account"}
+                </p>
+              </form>
+            ) : (
+              /* 📜 FLIPKART-STYLE LIVE DOCUMENT TEXT RENDER FLOW PANEL */
+              <div style={{ width: '60%', padding: '45px 35px 20px 35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                
+                {/* Back Link Vector Header */}
+                <div 
+                  onClick={() => setLegalView('none')} 
+                  style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '5px' }}
+                >
+                  ← Back to Account Interface
+                </div>
+
+                {/* Inner Scrollable Text Container Grid */}
+                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#333333', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #e0e0e0', paddingTop: '12px' }}>
+                  {legalView === 'terms' ? (
+                    <>
+                      <h4 style={{ margin: '0 0 8px 0', color: '#000000', fontWeight: 'bold' }}>1. Platform Usage Parameters</h4>
+                      <p style={{ margin: '0 0 16px 0', color: '#666666' }}>BazaarInd acts as a high-density decentralized mock e-commerce node framework. All listed hardware materials, inventories, pricing points, and item properties are synthetically generated rows mapped for production environment verification cycles.</p>
+                      
+                      <h4 style={{ margin: '0 0 8px 0', color: '#000000', fontWeight: 'bold' }}>2. Simulation Cart Boundaries</h4>
+                      <p style={{ margin: '0 0 16px 0', color: '#666666' }}>Items transferred to your checkout tracking system represent mock visual arrays. No monetary settlement protocols or distribution dispatches will be initiated upon executing simulated network transactions.</p>
+                      
+                      <h4 style={{ margin: '0 0 8px 0', color: '#000000', fontWeight: 'bold' }}>3. Identity Accountability</h4>
+                      <p style={{ margin: '0 0 8px 0', color: '#666666' }}>Operators remain accountable for retaining credential identifiers clean of malicious string patterns. The platform holds terminal veto authority over spam entities.</p>
+                    </>
+                  ) : (
+                    <>
+                      <h4 style={{ margin: '0 0 8px 0', color: '#000000', fontWeight: 'bold' }}>1. Credential Security Controls</h4>
+                      <p style={{ margin: '0 0 16px 0', color: '#666666' }}>Your tracking attributes, mobile identifiers, email structures, and password cipher logs are stored directly across encrypted MongoDB Atlas clusters. Content transmissions pass exclusively through authorized REST API pipelines.</p>
+                      
+                      <h4 style={{ margin: '0 0 8px 0', color: '#000000', fontWeight: 'bold' }}>2. Cache Footprint Specifications</h4>
+                      <p style={{ margin: '0 0 16px 0', color: '#666666' }}>BazaarInd utilizes localized browser storage strings to record profile structures, allowing seamless user session persistence across browser reloads without cookie leakage pathways.</p>
+                      
+                      <h4 style={{ margin: '0 0 8px 0', color: '#000000', fontWeight: 'bold' }}>3. Cross-Origin Data Isolation</h4>
+                      <p style={{ margin: '0 0 8px 0', color: '#666666' }}>Inbound requests are whitelisted securely at our Render backend layout gates to ensure zero unauthorized administrative cross-site scripting (XSS) leaks reach your profile nodes.</p>
+                    </>
+                  )}
+                </div>
+
+                {/* Bottom Action Footer Close Trigger */}
+                <button 
+                  onClick={() => setLegalView('none')} 
+                  style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '40px', borderRadius: '2px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', marginTop: '15px', textTransform: 'uppercase' }}
+                >
+                  Acknowledge and Return
+                </button>
               </div>
+            )}
 
-              <div style={{ marginBottom: '30px' }}>
-                <input 
-                  type="password" 
-                  placeholder="Enter Password" 
-                  required 
-                  value={authForm.password} 
-                  onChange={(e) => setAuthForm({...authForm, password: e.target.value})} 
-                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
-                />
-              </div>
-
-              <p style={{ fontSize: '12px', color: '#878787', lineHeight: '1.4', margin: '0 0 24px 0' }}>
-                By continuing, you agree to BazaarInd's <span style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '500' }}>Terms of Use</span> and <span style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '500' }}>Privacy Policy</span>.
-              </p>
-
-              <button type="submit" style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '48px', borderRadius: '2px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.2)', textTransform: 'uppercase' }}>
-                {isSignUp ? "Continue to Signup" : "Log In"}
-              </button>
-
-              <p onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ color: '#2874F0', fontSize: '14px', textAlign: 'center', cursor: 'pointer', marginTop: '35px', fontWeight: '500' }}>
-                {isSignUp ? "Existing User? Log in to your channel" : "New to BazaarInd? Create an account"}
-              </p>
-            </form>
           </div>
         </div>
       )}
