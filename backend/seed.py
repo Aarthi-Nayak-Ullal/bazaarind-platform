@@ -2,7 +2,9 @@ import asyncio
 import random
 from motor.motor_asyncio import AsyncIOMotorClient
 
-MONGO_URL = "mongodb://localhost:27017"
+# 🌐 CLOUD CLUSTER ACCESS INTERLOCK (Updated from localhost to Atlas)
+# Update this line at the top of backend/seed.py
+MONGO_URL = "mongodb+srv://bazaar_admin:BazaarPass2026@bazaarind-cluster.toys3k4.mongodb.net/?appName=BazaarInd-Cluster"
 DATABASE_NAME = "ecommerce"
 
 CATEGORIES = ["Electronics", "Home & Kitchen", "Groceries", "Apparel", "Fitness & Lifestyle", "Footwear", "Books & Stationery"]
