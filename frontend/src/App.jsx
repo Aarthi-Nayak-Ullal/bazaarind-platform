@@ -77,18 +77,18 @@ function App() {
     }
   }, [currentView])
 
-  // Cold Boot User Register Synchronization
+  // Cold Boot User Register Synchronization with Live Render API
   useEffect(() => {
     const savedUser = localStorage.getItem('bazaarUser')
     if (savedUser) setUser(JSON.parse(savedUser))
 
-    fetch('http://127.0.0.1:8000/api/products')
+    fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
         setProducts(data)
         setFilteredProducts(data)
       })
-      .catch(err => console.error("Database cluster stream failure:", err))
+      .catch(err => console.error("Database cloud cluster stream failure:", err))
   }, [])
 
   // Logic Gate for Multi-Tier Search Filtering
@@ -108,7 +108,7 @@ function App() {
     setAuthError('')
     const endpoint = isSignUp ? 'register' : 'login'
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/${endpoint}`, {
+      const response = await fetch(`https://bazaarind-backend.onrender.com/api/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(authForm)
@@ -200,20 +200,20 @@ function App() {
       
       {/* 3.1 CYBER HOME VIEW */}
       {currentView === 'home' && (
-        <div className="animated-fade" style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '30px' }}>
+        <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
           {/* HIGH-RES STYLED BANNER COVERS */}
           <div style={{ 
             backgroundImage: `${promoBanners[activeBanner].gradient}, url("${promoBanners[activeBanner].img}")`, 
             backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', height: '280px', borderRadius: '6px', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${theme.border}`, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)'
           }}>
-            <span style={{ backgroundColor: theme.accent, width: 'fit-content', padding: '3px 10px', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', letterSpacing: '1px' }}>SYSTEM SYSTEM DISCOUNTS</span>
+            <span style={{ backgroundColor: theme.accent, width: 'fit-content', padding: '3px 10px', borderRadius: '3px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', letterSpacing: '1px' }}>SYSTEM DISCOUNTS</span>
             <h2 style={{ fontSize: '30px', margin: '0 0 8px 0', fontWeight: '900', color: theme.textPrimary }}>{promoBanners[activeBanner].title}</h2>
             <p style={{ fontSize: '16px', margin: '0 0 20px 0', color: theme.textSecondary }}>{promoBanners[activeBanner].sub}</p>
             <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>ENGAGE INFRASTRUCTURE</button>
           </div>
 
-          {/* RECOMENDATIONS ROW MODULE */}
+          {/* RECOMMENDATIONS ROW MODULE */}
           <div style={{ backgroundColor: theme.panel, padding: '24px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
             <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: theme.textPrimary }}>Algorithmic Core Recommendations 🔥</h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: theme.textSecondary }}>High-density records verified for sudden volume markdown routing.</p>
@@ -233,9 +233,9 @@ function App() {
         </div>
       )}
 
-      {/* 3.2 DATA REGISTRY CATALOG CATALOG GRID VIEW */}
+      {/* 3.2 DATA REGISTRY CATALOG GRID VIEW */}
       {currentView === 'catalog' && (
-        <main className="animated-fade" style={{ padding: '30px 10%' }}>
+        <main style={{ padding: '30px 10%' }}>
           <h2 style={{ fontSize: '20px', color: theme.textPrimary, marginBottom: '2px' }}>{selectedCategory.toUpperCase()} REGISTRY INDEX</h2>
           <p style={{ margin: '0 0 25px 0', fontSize: '12px', color: theme.textSecondary }}>Resolved Node Count Capacity: {filteredProducts.length} entries streaming live</p>
           
@@ -269,9 +269,9 @@ function App() {
         </main>
       )}
 
-      {/* 3.3 TRANSACTION PIPELINE STEPS CHEKOUT VIEW */}
+      {/* 3.3 TRANSACTION PIPELINE STEPS CHECKOUT VIEW */}
       {currentView === 'checkout' && (
-        <div className="animated-fade" style={{ padding: '30px 10%', display: 'flex', gap: '30px' }}>
+        <div style={{ padding: '30px 10%', display: 'flex', gap: '30px' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', gap: '25px', fontWeight: 'bold', fontSize: '12px', letterSpacing: '0.5px' }}>
               <span style={{ color: checkoutStep === 1 ? theme.accent : theme.textSecondary }}>① DESTINATION MATRIX SHIPPING</span>
@@ -280,7 +280,7 @@ function App() {
             </div>
 
             {checkoutStep === 1 ? (
-              <div className="animated-modal" style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
+              <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
                 <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Specify Target Shipping Vectors</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                   {['fullName', 'phone', 'pinCode', 'localAddress', 'city', 'state'].map(field => (
@@ -290,7 +290,7 @@ function App() {
                 <button onClick={() => setCheckoutStep(2)} style={{ marginTop: '25px', padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', float: 'right' }}>SAVE PARAMETERS</button>
               </div>
             ) : (
-              <div className="animated-modal" style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
+              <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
                 <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Select Payment Network Node</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {['BHIM / GooglePay UPI Network', 'Credit or Debit Card Gateway', 'Cash on Delivery (COD)'].map(method => (
@@ -323,7 +323,7 @@ function App() {
 
       {/* 3.4 SUCCESS RECEIPT DISPLAY VIEW */}
       {currentView === 'order-success' && (
-        <div className="animated-fade" style={{ textAlign: 'center', padding: '80px 10%' }}>
+        <div style={{ textAlign: 'center', padding: '80px 10%' }}>
           <div style={{ backgroundColor: theme.panel, display: 'inline-block', padding: '50px 70px', borderRadius: '8px', border: `1px solid ${theme.border}`, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
             <span style={{ fontSize: '60px', display: 'block' }}>✅</span>
             <h2 style={{ color: theme.action, margin: '20px 0 10px 0', fontSize: '26px', fontWeight: '900' }}>Order Processing Dispatched!</h2>
@@ -336,7 +336,7 @@ function App() {
       {/* REUSABLE UTILITY FLYOUTS: FLYOUT SIDE REGISTER (CART) */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
-          <div className="animated-panel" style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
+          <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
               <h2 style={{ margin: 0, fontSize: '18px', color: theme.textPrimary }}>Volatile Buffer Memory (Cart)</h2>
               <button onClick={() => setShowCartModal(false)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
@@ -351,7 +351,7 @@ function App() {
               <>
                 <div style={{ overflowY: 'auto', flex: 1, paddingRight: '5px' }}>
                   {cart.map((item, index) => (
-                    <div key={index} className="animated-fade" style={{ display: 'flex', gap: '15px', alignItems: 'center', padding: '12px 0', borderBottom: `1px dashed ${theme.border}` }}>
+                    <div key={index} style={{ display: 'flex', gap: '15px', alignItems: 'center', padding: '12px 0', borderBottom: `1px dashed ${theme.border}` }}>
                       <img src={item.image_url} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px', backgroundColor: theme.bg }} onError={(e) => { e.target.onerror = null; e.target.src = fallbacks[item.category]; }} alt="Thumb" />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
@@ -381,7 +381,7 @@ function App() {
       {/* LAYER LOCK OVERLAY SECURITY INTERLOCK GATES (AUTH) */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div className="animated-modal" style={{ backgroundColor: theme.panel, width: '630px', height: '400px', borderRadius: '6px', display: 'flex', overflow: 'hidden', position: 'relative', border: `1px solid ${theme.border}`, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+          <div style={{ backgroundColor: theme.panel, width: '630px', height: '400px', borderRadius: '6px', display: 'flex', overflow: 'hidden', position: 'relative', border: `1px solid ${theme.border}`, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
             <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '10px', right: '15px', border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
             <div style={{ backgroundColor: theme.bg, width: '40%', padding: '40px 30px', color: theme.textPrimary, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRight: `1px solid ${theme.border}` }}>
               <div>
