@@ -83,7 +83,6 @@ function App() {
     fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
-        // 🛡️ Safety Shield: Only process if the cloud returns a valid array list
         if (Array.isArray(data)) {
           setProducts(data)
           setFilteredProducts(data)
@@ -199,11 +198,8 @@ function App() {
       </div>
 
       {/* 3. CORE VIEWPORT SWAPPER ROUTER */}
-      
-      {/* 3.1 CYBER HOME VIEW */}
       {currentView === 'home' && (
         <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
           <div style={{ 
             backgroundImage: `${promoBanners[activeBanner].gradient}, url("${promoBanners[activeBanner].img}")`, 
             backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', height: '280px', borderRadius: '6px', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${theme.border}`, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)'
@@ -233,7 +229,6 @@ function App() {
         </div>
       )}
 
-      {/* 3.2 DATA REGISTRY CATALOG GRID VIEW */}
       {currentView === 'catalog' && (
         <main style={{ padding: '30px 10%' }}>
           <h2 style={{ fontSize: '20px', color: theme.textPrimary, marginBottom: '2px' }}>{selectedCategory.toUpperCase()} REGISTRY INDEX</h2>
@@ -268,7 +263,6 @@ function App() {
         </main>
       )}
 
-      {/* 3.3 TRANSACTION PIPELINE STEPS CHECKOUT VIEW */}
       {currentView === 'checkout' && (
         <div style={{ padding: '30px 10%', display: 'flex', gap: '30px' }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -320,7 +314,6 @@ function App() {
         </div>
       )}
 
-      {/* 3.4 SUCCESS RECEIPT DISPLAY VIEW */}
       {currentView === 'order-success' && (
         <div style={{ textAlign: 'center', padding: '80px 10%' }}>
           <div style={{ backgroundColor: theme.panel, display: 'inline-block', padding: '50px 70px', borderRadius: '8px', border: `1px solid ${theme.border}`, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.5)' }}>
@@ -377,27 +370,83 @@ function App() {
         </div>
       )}
 
-      {/* SECURITY AUTH MODAL */}
+      {/* 📘 HIGH-IMPACT SPLICED FLIPKART LOGIN/SIGNUP MODAL INTERFACE */}
       {showAuthModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: theme.panel, width: '630px', height: '400px', borderRadius: '6px', display: 'flex', overflow: 'hidden', position: 'relative', border: `1px solid ${theme.border}`, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
-            <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '10px', right: '15px', border: 'none', background: 'none', fontSize: '20px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
-            <div style={{ backgroundColor: theme.bg, width: '40%', padding: '40px 30px', color: theme.textPrimary, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderRight: `1px solid ${theme.border}` }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
+          <div style={{ width: '650px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
+            
+            {/* Close Button Matrix */}
+            <button onClick={() => setShowAuthModal(false)} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '18px', color: '#878787', cursor: 'pointer', zIndex: 10 }}>✕</button>
+            
+            {/* Left Column: Iconic Brand Pane */}
+            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', color: '#ffffff' }}>
               <div>
-                <h2 style={{ margin: '0 0 15px 0', fontSize: '22px', color: theme.accent }}>{isSignUp ? "Register Node" : "Identity Interlock"}</h2>
-                <p style={{ fontSize: '13px', lineHeight: '1.5', color: theme.textSecondary }}>{isSignUp ? "Open an interface credential packet to map system rows." : "Verify host identifiers to release secure pipeline paths."}</p>
+                <h2 style={{ fontSize: '28px', fontWeight: '500', margin: '0 0 16px 0' }}>
+                  {isSignUp ? "Sign Up" : "Login"}
+                </h2>
+                <p style={{ fontSize: '15px', lineHeight: '1.5', color: '#dbdbdb', margin: 0 }}>
+                  {isSignUp 
+                    ? "Create an operator credentials packet to manage your hardware preferences seamlessly." 
+                    : "Get access to your Orders, Wishlist and Recommendations"}
+                </p>
               </div>
-              <span style={{ fontSize: '44px', opacity: 0.15 }}>🔒</span>
+              <div style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '1px', opacity: 0.3, textAlign: 'center' }}>BazaarInd</div>
             </div>
-            <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '40px', display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center' }}>
-              {authError && <div style={{ color: theme.accent, fontSize: '12px', fontWeight: 'bold' }}>{authError}</div>}
-              {isSignUp && (
-                <input type="text" placeholder="Enter Parameter Operator Name" required value={authForm.name} onChange={(e) => setAuthForm({...authForm, name: e.target.value})} style={{ padding: '12px 0', backgroundColor: 'none', border: 'none', borderBottom: `1px solid ${theme.border}`, outline: 'none', fontSize: '14px', color: theme.textPrimary }} />
+
+            {/* Right Column: Interactive Form Field Matrix */}
+            <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '56px 35px 16px 35px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
+              {authError && (
+                <div style={{ backgroundColor: '#ffeae9', color: '#d32f2f', padding: '10px', borderRadius: '4px', fontSize: '13px', marginBottom: '15px', border: '1px solid #f4c7c3' }}>
+                  {authError}
+                </div>
               )}
-              <input type="email" placeholder="Enter Connection Identifier Email" required value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} style={{ padding: '12px 0', backgroundColor: 'none', border: 'none', borderBottom: `1px solid ${theme.border}`, outline: 'none', fontSize: '14px', color: theme.textPrimary }} />
-              <input type="password" placeholder="Enter Cipher Entry Password" required value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} style={{ padding: '12px 0', backgroundColor: 'none', border: 'none', borderBottom: `1px solid ${theme.border}`, outline: 'none', fontSize: '14px', color: theme.textPrimary }} />
-              <button type="submit" style={{ backgroundColor: theme.accent, color: theme.textPrimary, padding: '12px', border: 'none', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>{isSignUp ? "INITIALIZE NODES" : "UNLOCK GATE"}</button>
-              <p onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ color: theme.textSecondary, fontSize: '12px', textAlign: 'center', cursor: 'pointer', marginTop: '15px' }}>{isSignUp ? "Existing operator? Access login vector" : "New platform entity? Build network identity"}</p>
+              
+              {isSignUp && (
+                <div style={{ marginBottom: '30px' }}>
+                  <input 
+                    type="text" 
+                    placeholder="Enter Full Name" 
+                    required 
+                    value={authForm.name} 
+                    onChange={(e) => setAuthForm({...authForm, name: e.target.value})} 
+                    style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
+                  />
+                </div>
+              )}
+
+              <div style={{ marginBottom: '30px' }}>
+                <input 
+                  type="email" 
+                  placeholder="Enter Email Address" 
+                  required 
+                  value={authForm.email} 
+                  onChange={(e) => setAuthForm({...authForm, email: e.target.value})} 
+                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
+                />
+              </div>
+
+              <div style={{ marginBottom: '30px' }}>
+                <input 
+                  type="password" 
+                  placeholder="Enter Password" 
+                  required 
+                  value={authForm.password} 
+                  onChange={(e) => setAuthForm({...authForm, password: e.target.value})} 
+                  style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} 
+                />
+              </div>
+
+              <p style={{ fontSize: '12px', color: '#878787', lineHeight: '1.4', margin: '0 0 24px 0' }}>
+                By continuing, you agree to BazaarInd's <span style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '500' }}>Terms of Use</span> and <span style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '500' }}>Privacy Policy</span>.
+              </p>
+
+              <button type="submit" style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '48px', borderRadius: '2px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.2)', textTransform: 'uppercase' }}>
+                {isSignUp ? "Continue to Signup" : "Log In"}
+              </button>
+
+              <p onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ color: '#2874F0', fontSize: '14px', textAlign: 'center', cursor: 'pointer', marginTop: '35px', fontWeight: '500' }}>
+                {isSignUp ? "Existing User? Log in to your channel" : "New to BazaarInd? Create an account"}
+              </p>
             </form>
           </div>
         </div>
