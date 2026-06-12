@@ -68,30 +68,87 @@ function App() {
     { name: 'Books & Stationery', icon: '📚' }
   ]
 
+  // 🎯 HIGH-FIDELITY PRODUCT EXPLICIT LINK IMAGE REPOSITORY MAP
   const resolvePristineProductImage = (name, category) => {
     const lower = name.toLowerCase();
+    
+    // --- ELECTRONICS ---
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('smartphone') || lower.includes('5g')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('watch')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('smartwatch') || lower.includes('watch')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('earbuds') || lower.includes('tws')) return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('keyboard')) return "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('speaker')) return "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('mouse')) return "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('router')) return "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('soundbar')) return "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('flashlight')) return "https://images.unsplash.com/photo-1590135548644-8846c433177f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('card') || lower.includes('sd')) return "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('power bank')) return "https://images.unsplash.com/photo-1609592424109-dd9892f1b177?auto=format&fit=crop&w=600&q=80";
+
+    // --- HOME & KITCHEN ---
+    if (lower.includes('kettle')) return "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('grinder') || lower.includes('mixer')) return "https://images.unsplash.com/photo-1581646731595-15f1a55517be?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cooker') || lower.includes('pressure')) return "https://images.unsplash.com/photo-1584990351321-8dd934c15ef1?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('heater') || lower.includes('water heater')) return "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('fan') || lower.includes('ceiling')) return "https://images.unsplash.com/photo-1618941716939-556e099607eb?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('iron') || lower.includes('dry iron')) return "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('purifier') || lower.includes('ro water')) return "https://images.unsplash.com/photo-1609842761180-15d9307b6bfb?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('flask')) return "https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('glass set')) return "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cooktop')) return "https://images.unsplash.com/photo-1626700051175-6518c4793f4f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cookware')) return "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&w=600&q=80";
+
+    // --- GROCERIES ---
+    if (lower.includes('atta') || lower.includes('flour')) return "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('oil') || lower.includes('mustard')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('salt')) return "https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('ghee')) return "https://images.unsplash.com/photo-1589227365533-cee630bd59bd?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('tea')) return "https://images.unsplash.com/photo-1597481499750-3e6b22637e12?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('rice')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('turmeric') || lower.includes('powder')) return "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('noodles')) return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('detergent')) return "https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('handwash')) return "https://images.unsplash.com/photo-1603306466153-810029bbd635?auto=format&fit=crop&w=600&q=80";
+
+    // --- APPAREL ---
     if (lower.includes('jeans')) return "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('shirt')) return "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('t-shirt') || lower.includes('polo')) return "https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('saree')) return "https://images.unsplash.com/photo-1610030470224-3067b8f61605?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('running') || lower.includes('sneakers')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('kurta')) return "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('trousers') || lower.includes('pants')) return "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('blazer')) return "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('socks')) return "https://images.unsplash.com/photo-1582966772680-860e372bb558?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('belt')) return "https://images.unsplash.com/photo-1624222247344-550fb8ef5582?auto=format&fit=crop&w=600&q=80";
+
+    // --- FITNESS & LIFESTYLE ---
+    if (lower.includes('dumbbell')) return "https://images.unsplash.com/photo-1638536532686-d610adfc8e5c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('football')) return "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('yoga mat')) return "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('sunglasses')) return "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('wallet')) return "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('suitcase')) return "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('helmet')) return "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('calculator')) return "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=600&q=80";
+
+    // --- FOOTWEAR ---
+    if (lower.includes('running') || lower.includes('sneakers') || lower.includes('shoes')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('leather shoes') || lower.includes('formal')) return "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('kettle')) return "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('blender') || lower.includes('mixer')) return "https://images.unsplash.com/photo-1581646731595-15f1a55517be?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('cooker')) return "https://images.unsplash.com/photo-1584990351321-8dd934c15ef1?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('atta') || lower.includes('flour')) return "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('oil')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('rice')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('sandals')) return "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('slippers') || lower.includes('flip flops')) return "https://images.unsplash.com/photo-1605991538393-cf7a4194bab1?auto=format&fit=crop&w=600&q=80";
+
+    // --- BOOKS & STATIONERY ---
+    if (lower.includes('notebook')) return "https://images.unsplash.com/photo-1531346878377-a5be20888e57?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('pen')) return "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('geometry') || lower.includes('clipboard') || lower.includes('markers')) return "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=600&q=80";
     if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
+
+    // Global absolute design backup frame
     return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
   };
 
+  // SYSTEM CLOCK & DELAY CALCULATION INTERRUPT
   useEffect(() => {
     const options = { day: 'numeric', month: 'long', year: 'numeric' }
     const today = new Date()
@@ -102,6 +159,7 @@ function App() {
     setDeliveryDateString(targetArrival.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
   }, [])
 
+  // Auto-advance loop for sliding banner array
   useEffect(() => {
     if (currentView === 'home') {
       const bannerTimer = setInterval(() => {
@@ -111,6 +169,7 @@ function App() {
     }
   }, [currentView, promoBanners.length])
 
+  // COLD BOOT: Instantly show authentication modal popup on load if user is a guest
   useEffect(() => {
     const savedUser = localStorage.getItem('bazaarUser')
     if (savedUser) {
@@ -134,6 +193,7 @@ function App() {
       .catch(err => console.error("Database cloud cluster stream failure:", err))
   }, [])
 
+  // Logic Gate for Multi-Tier Search Filtering
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') {
@@ -193,36 +253,57 @@ function App() {
     action: '#10b981'     
   }
 
-  // 🎯 GENERATE DYNAMIC CATEGORY VARIANT FIELDS FOR DESCRIPTION LAYER
+  // 🎯 GENERATE DETAILED ITEM-SPECIFIC FIELDS FOR THE VARIANT SELECTION ENGINE
   let colorOptions = ['Standard Edition'];
-  let sizeLabel = 'Size Options';
-  let sizeOptions = ['Standard Unit'];
+  let sizeLabel = 'Configuration';
+  let sizeOptions = ['Standard Pack'];
 
   if (selectedProduct) {
+    const lowerName = selectedProduct.name.toLowerCase();
+    
+    // Set base theme palettes dynamically based on top categories
     if (selectedProduct.category === "Electronics") {
-      colorOptions = ['Space Charcoal', 'Stellar Silver', 'Midnight Black'];
+      colorOptions = ['Midnight Black', 'Stellar Silver', 'Space Blue'];
+    } else if (selectedProduct.category === "Apparel" || selectedProduct.category === "Footwear") {
+      colorOptions = ['Classic Dark Tone', 'Navy Slate', 'Olive Green'];
+    } else if (selectedProduct.category === "Home & Kitchen") {
+      colorOptions = ['Brushed Platinum', 'Piano Black', 'Crimson Flare'];
+    } else if (selectedProduct.category === "Groceries") {
+      colorOptions = ['Standard Regular', 'Premium Organic Selection'];
+    }
+
+    // Advanced nested evaluation for exact variant metadata binding
+    if (lowerName.includes('smartphone') || lowerName.includes('5g')) {
       sizeLabel = 'Storage Matrix';
       sizeOptions = ['128GB (8GB RAM)', '256GB (12GB RAM)'];
+    } else if (lowerName.includes('headphone') || lowerName.includes('earbuds') || lowerName.includes('tws') || lowerName.includes('speaker') || lowerName.includes('soundbar')) {
+      sizeLabel = 'Audio Profile';
+      sizeOptions = ['Pure Balanced Audio', 'Pro Bass Boost Edition'];
+    } else if (lowerName.includes('watch') || lowerName.includes('smartwatch')) {
+      sizeLabel = 'Dial Dimensions';
+      sizeOptions = ['40mm Sports Casing', '44mm Active Mesh Casing'];
+    } else if (lowerName.includes('sd card') || lowerName.includes('microsd')) {
+      sizeLabel = 'Flash Memory Capacity';
+      sizeOptions = ['64GB Class 10', '128GB Ultra-Fast', '256GB Extreme Pro'];
+    } else if (lowerName.includes('power bank')) {
+      sizeLabel = 'Cell Density';
+      sizeOptions = ['10,000 mAh Standard', '20,000 mAh Fast Delivery'];
     } else if (selectedProduct.category === "Apparel") {
-      colorOptions = ['Classic Navy', 'Matte Black', 'Olive Green'];
-      sizeLabel = 'Clothing Size';
+      sizeLabel = 'Clothing Fitting';
       sizeOptions = ['S', 'M', 'L', 'XL'];
     } else if (selectedProduct.category === "Footwear") {
-      colorOptions = ['Sporty White', 'Carbon Gray', 'Tan Leather'];
       sizeLabel = 'Shoe Size (UK)';
       sizeOptions = ['7', '8', '9', '10'];
     } else if (selectedProduct.category === "Home & Kitchen") {
-      colorOptions = ['Brushed Steel', 'Piano Black', 'Crimson Red'];
-      sizeLabel = 'Capacity / Spec';
-      sizeOptions = ['Regular (Compact)', 'Family Pack (Large)'];
+      sizeLabel = 'Capacity / Tank Size';
+      sizeOptions = ['Regular Compact Unit', 'Family-Size Double Capacity'];
     } else if (selectedProduct.category === "Groceries") {
-      colorOptions = ['Standard Regular', 'Premium Organic'];
-      sizeLabel = 'Net Weight Value';
-      sizeOptions = ['500g', '1 Kg', '2 Kg', '5 Kg'];
+      sizeLabel = 'Net Weight Mass';
+      sizeOptions = ['500g Pack', '1 Kg Pack', '5 Kg Economy Bundle'];
     } else if (selectedProduct.category === "Books & Stationery") {
-      colorOptions = ['Collector Edition'];
-      sizeLabel = 'Print Layout';
-      sizeOptions = ['Paperback', 'Hardcover Edition'];
+      colorOptions = ['Standard Print'];
+      sizeLabel = 'Binding Cover Option';
+      sizeOptions = ['Paperback Edition', 'Hardcover Collector Copy'];
     }
   }
 
@@ -348,7 +429,7 @@ function App() {
         </main>
       )}
 
-      {/* 🛍️ PRODUCT DESCRIPTION VIEWPORT (With Dynamic Variant Fixes) */}
+      {/* 🛍️ PRODUCT DESCRIPTION VIEWPORT */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ padding: '30px 10%', backgroundColor: '#f1f3f6', color: '#000000', minHeight: '85vh' }}>
           <div style={{ fontSize: '12px', color: '#878787', marginBottom: '20px', fontWeight: '500' }}>
@@ -385,7 +466,7 @@ function App() {
                 <span style={{ fontSize: '16px', color: '#388e3c', fontWeight: 'bold' }}>25% Off Deal Applied</span>
               </div>
 
-              {/* 🎯 SEAMLESS DYNAMIC VARIANT CLUSTERS ROW */}
+              {/* DYNAMIC ITEM SELECTION CLUSTER LAYOUT BLOCK */}
               <div style={{ borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0', padding: '20px 0', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
                   <span style={{ width: '160px', color: '#878787', fontSize: '14px', fontWeight: '500' }}>Color Option</span>
@@ -409,14 +490,14 @@ function App() {
               <div style={{ marginBottom: '25px' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: '500', color: '#212121', margin: '0 0 12px 0' }}>Available Bank Network Offers</h4>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#212121' }}>
-                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Bank Offer:</strong> Extra 10% off on AXIS Bank Credit Card transactions, up to ₹1,250.</li>
-                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Partner Offer:</strong> Sign up for BazaarInd Premium to unlock free automated checkout shipping buffers.</li>
+                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Bank Offer:</strong> Extra 10% off on AXIS Bank Credit Card transactions, up to ₹1,250. [cite: 93]</li>
+                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Partner Offer:</strong> Sign up for BazaarInd Premium to unlock free automated checkout shipping buffers. [cite: 115]</li>
                 </ul>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#212121', backgroundColor: '#f9f9f9', padding: '12px 16px', borderRadius: '2px', border: '1px solid #e0e0e0' }}>
                 <span style={{ color: '#878787', width: '110px', fontWeight: '500' }}>Delivery Context</span>
-                <div>Delivery by <strong style={{ color: '#388e3c' }}>{deliveryDateString}</strong> | <span style={{ color: '#388e3c', fontWeight: 'bold' }}>FREE Express Routing</span></div>
+                <div>Delivery by <strong style={{ color: '#388e3c' }}>{deliveryDateString}</strong> | <span style={{ color: '#388e3c', fontWeight: 'bold' }}>FREE Express Routing</span> [cite: 556]</div>
               </div>
             </div>
           </div>
@@ -491,6 +572,7 @@ function App() {
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
+            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
               <h2 style={{ margin: 0, fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
               <button onClick={() => setShowCartModal(false)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
@@ -532,15 +614,15 @@ function App() {
         </div>
       )}
 
-      {/* 📘 BAZAARIND HIGH-CONVERSION LANDING MODAL INTERFACE */}
+      {/* 📘 OFFICIAL SPLICED LOGIN/SIGNUP MODAL INTERFACE */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
           <div style={{ width: '650px', height: '528px', backgroundColor: '#ffffff', borderRadius: '2px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
             
             <button onClick={() => { setShowAuthModal(false); setLegalView('none'); }} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '18px', color: '#878787', cursor: 'pointer', zIndex: 10 }}>✕</button>
             
-            {/* Left Brand Panel */}
-            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', justifyContent: 'space-between', color: '#ffffff' }}>
+            {/* Left Column: Iconic Brand Pane */}
+            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', color: '#ffffff' }}>
               <div>
                 <h2 style={{ fontSize: '24px', fontWeight: '500', margin: '0 0 16px 0' }}>
                   {legalView === 'terms' ? "Terms of Use" : legalView === 'privacy' ? "Privacy Policy" : isSignUp ? "Sign Up" : "Login"}
@@ -558,7 +640,7 @@ function App() {
               <div style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '1px', opacity: 0.3, textAlign: 'center' }}>BazaarInd</div>
             </div>
 
-            {/* Right Interactive Container Swapper */}
+            {/* Right Column Context Swapper */}
             {legalView === 'none' ? (
               <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '56px 35px 16px 35px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
                 {authError && (
@@ -596,7 +678,7 @@ function App() {
                 </p>
               </form>
             ) : (
-              /* 📜 GENERALIZED DVERSIONS OF TERMS & POLICY INNER TEXT PANE */
+              /* 📜 REBRANDED DOCUMENTATION SCROLL PANELS */
               <div style={{ width: '60%', padding: '35px 35px 20px 35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                 
                 <div onClick={() => setLegalView('none')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '15px' }}>
@@ -606,24 +688,24 @@ function App() {
                 <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#333333', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #e0e0e0', paddingTop: '12px' }}>
                   {legalView === 'terms' ? (
                     <>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Terms of Use</h4>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Terms of Use [cite: 172]</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Welcome to BazaarInd. By accessing or utilizing this website, applications, or marketplace services, you explicitly agree to be bound by these Terms of Use and all incorporated operational parameters.
+                        Welcome to BazaarInd. By accessing or utilizing this website, applications, or marketplace services, you explicitly agree to be bound by these Terms of Use and all incorporated operational parameters[cite: 177].
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Marketplace Services Facilitation</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        BazaarInd operates an online e-commerce platform acting as an intermediary to connect independent sellers with buyers. All commercial agreements including pricing adjustments, shipping logistics, and item guarantees are determined directly between customers and corresponding storefront merchants.
+                        BazaarInd operates an online e-commerce platform acting as an intermediary to connect independent sellers with buyers[cite: 221, 222]. All commercial agreements including pricing adjustments, shipping logistics, and item guarantees are determined directly between customers and corresponding storefront merchants[cite: 224, 225].
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Account Security & Verification</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Your registered connection identifiers serve as your primary parameters. Users accept sole accountability for maintaining password string confidentiality and protecting their private workspace profiles from unauthorized access.
+                        Your registered connection identifiers serve as your primary parameters[cite: 193]. Users accept sole accountability for maintaining password string confidentiality and protecting their private workspace profiles from unauthorized access[cite: 191].
                       </p>
 
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Fair Usage & Platform Fees</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        BazaarInd reserves the right to impose nominal handling adjustments, logistic tracking infrastructure fees, or small bundle system charges. All active variations will be transparently updated in your basket prior to order placement execution.
+                        BazaarInd reserves the right to impose nominal handling adjustments, logistic tracking infrastructure fees, or small bundle system charges[cite: 294, 297]. All active variations will be transparently updated in your basket prior to order placement execution[cite: 298].
                       </p>
 
                       <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Grievance Redressal Support</h5>
@@ -633,24 +715,24 @@ function App() {
                     </>
                   ) : (
                     <>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Privacy Policy</h4>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Privacy Policy [cite: 15]</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We place maximum priority on safeguarding user profile confidentiality and transaction integrity. This Privacy Policy details how we handle the accumulation, processing, and protection of your data elements.
+                        We place maximum priority on safeguarding user profile confidentiality and transaction integrity[cite: 19]. This Privacy Policy details how we handle the accumulation, processing, and protection of your data elements[cite: 20].
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Core Data Accumulation</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We compile essential transaction attributes including identity coordinates, delivery destinations, interface timelines, and product browsing selections when you manage profiles or process items through your cart logs.
+                        We compile essential transaction attributes including identity coordinates, delivery destinations, interface timelines, and product browsing selections when you manage profiles or process items through your cart logs[cite: 29, 39].
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Information Protection Protocols</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        All recorded profile coordinates and password cipher nodes are managed inside isolated cloud network databases with complete transit encryption. No personal details are sold or distributed to third-party marketing channels without consent.
+                        All recorded profile coordinates and password cipher nodes are managed inside isolated cloud network databases with complete transit encryption[cite: 122, 123]. No personal details are sold or distributed to third-party marketing channels without consent[cite: 526].
                       </p>
 
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Cookies & Session Storage</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Localized browser variables and cookies are utilized strictly to streamline account persistence, preserve product tracking states across system reloads, and reinforce platform session authentication gates.
+                        Localized browser variables and cookies are utilized strictly to streamline account persistence, preserve product tracking states across system reloads, and reinforce platform session authentication gates[cite: 78, 81].
                       </p>
 
                       <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Privacy Assurance Desk</h5>
