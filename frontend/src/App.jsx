@@ -56,12 +56,10 @@ function App() {
 
   // SYSTEM CLOCK & DELAY CALCULATION INTERRUPT
   useEffect(() => {
-    // 1. Resolve current structural system calendar time
     const options = { day: 'numeric', month: 'long', year: 'numeric' }
     const today = new Date()
     setSystemDate(today.toLocaleDateString('en-IN', options))
 
-    // 2. Compute downstream standard delivery delta (Current Date + 48 Hours)
     const targetArrival = new Date()
     targetArrival.setDate(today.getDate() + 2)
     setDeliveryDateString(targetArrival.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
@@ -85,8 +83,13 @@ function App() {
     fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
-        setProducts(data)
-        setFilteredProducts(data)
+        // 🛡️ Safety Shield: Only process if the cloud returns a valid array list
+        if (Array.isArray(data)) {
+          setProducts(data)
+          setFilteredProducts(data)
+        } else {
+          console.error("Backend sent an error object instead of a product list:", data)
+        }
       })
       .catch(err => console.error("Database cloud cluster stream failure:", err))
   }, [])
@@ -159,7 +162,6 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
           <div>
             <h1 style={{ margin: 0, fontSize: '24px', fontStyle: 'italic', fontWeight: 800, color: theme.accent, cursor: 'pointer' }} onClick={() => { setCurrentView('home'); setSelectedCategory('All'); setSearchQuery(''); }}>BazaarInd</h1>
-            {/* Dynamic Clock Insertion Node */}
             <span style={{ fontSize: '11px', color: theme.textSecondary, display: 'block', marginTop: '2px', fontWeight: 'bold', letterSpacing: '0.5px' }}>⏱️ {systemDate}</span>
           </div>
           
@@ -202,7 +204,6 @@ function App() {
       {currentView === 'home' && (
         <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
-          {/* HIGH-RES STYLED BANNER COVERS */}
           <div style={{ 
             backgroundImage: `${promoBanners[activeBanner].gradient}, url("${promoBanners[activeBanner].img}")`, 
             backgroundSize: 'cover', backgroundPosition: 'center', width: '100%', height: '280px', borderRadius: '6px', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${theme.border}`, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)'
@@ -213,7 +214,6 @@ function App() {
             <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>ENGAGE INFRASTRUCTURE</button>
           </div>
 
-          {/* RECOMMENDATIONS ROW MODULE */}
           <div style={{ backgroundColor: theme.panel, padding: '24px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
             <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: theme.textPrimary }}>Algorithmic Core Recommendations 🔥</h3>
             <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: theme.textSecondary }}>High-density records verified for sudden volume markdown routing.</p>
@@ -254,7 +254,6 @@ function App() {
                   </div>
                   <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: theme.textPrimary, margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={product.name}>{product.name}</h3>
                   
-                  {/* Dynamic Predictor Logic Engine Output */}
                   <span style={{ fontSize: '11px', color: theme.textSecondary, display: 'block', marginBottom: '6px' }}>
                     🚚 Express Delivery: <strong style={{ color: theme.action }}>{deliveryDateString}</strong>
                   </span>
@@ -333,7 +332,7 @@ function App() {
         </div>
       )}
 
-      {/* REUSABLE UTILITY FLYOUTS: FLYOUT SIDE REGISTER (CART) */}
+      {/* REUSABLE UTILITY FLYOUTS: CART FLYOUT */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
@@ -378,7 +377,7 @@ function App() {
         </div>
       )}
 
-      {/* LAYER LOCK OVERLAY SECURITY INTERLOCK GATES (AUTH) */}
+      {/* SECURITY AUTH MODAL */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '630px', height: '400px', borderRadius: '6px', display: 'flex', overflow: 'hidden', position: 'relative', border: `1px solid ${theme.border}`, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
