@@ -25,7 +25,7 @@ function App() {
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' })
   const [authError, setAuthError] = useState('')
   
-  // Flipkart-Style Legal View Tracking Matrix ('none', 'terms', 'privacy')
+  // BazaarInd Legal View Tracking Matrix ('none', 'terms', 'privacy')
   const [legalView, setLegalView] = useState('none')
 
   // Transaction Flight Modals
@@ -88,7 +88,7 @@ function App() {
     if (lower.includes('atta') || lower.includes('flour')) return "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('oil')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('rice')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
-    if (selectedProduct?.category === "Books & Stationery") return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
+    if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
     return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
   };
 
@@ -193,6 +193,39 @@ function App() {
     action: '#10b981'     
   }
 
+  // 🎯 GENERATE DYNAMIC CATEGORY VARIANT FIELDS FOR DESCRIPTION LAYER
+  let colorOptions = ['Standard Edition'];
+  let sizeLabel = 'Size Options';
+  let sizeOptions = ['Standard Unit'];
+
+  if (selectedProduct) {
+    if (selectedProduct.category === "Electronics") {
+      colorOptions = ['Space Charcoal', 'Stellar Silver', 'Midnight Black'];
+      sizeLabel = 'Storage Matrix';
+      sizeOptions = ['128GB (8GB RAM)', '256GB (12GB RAM)'];
+    } else if (selectedProduct.category === "Apparel") {
+      colorOptions = ['Classic Navy', 'Matte Black', 'Olive Green'];
+      sizeLabel = 'Clothing Size';
+      sizeOptions = ['S', 'M', 'L', 'XL'];
+    } else if (selectedProduct.category === "Footwear") {
+      colorOptions = ['Sporty White', 'Carbon Gray', 'Tan Leather'];
+      sizeLabel = 'Shoe Size (UK)';
+      sizeOptions = ['7', '8', '9', '10'];
+    } else if (selectedProduct.category === "Home & Kitchen") {
+      colorOptions = ['Brushed Steel', 'Piano Black', 'Crimson Red'];
+      sizeLabel = 'Capacity / Spec';
+      sizeOptions = ['Regular (Compact)', 'Family Pack (Large)'];
+    } else if (selectedProduct.category === "Groceries") {
+      colorOptions = ['Standard Regular', 'Premium Organic'];
+      sizeLabel = 'Net Weight Value';
+      sizeOptions = ['500g', '1 Kg', '2 Kg', '5 Kg'];
+    } else if (selectedProduct.category === "Books & Stationery") {
+      colorOptions = ['Collector Edition'];
+      sizeLabel = 'Print Layout';
+      sizeOptions = ['Paperback', 'Hardcover Edition'];
+    }
+  }
+
   return (
     <div style={{ backgroundColor: theme.bg, minHeight: '100vh', width: '100%', color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
       
@@ -254,7 +287,7 @@ function App() {
             <div style={{ display: 'flex', width: `${promoBanners.length * 100}%`, height: '100%', transform: `translateX(-${activeBanner * (100 / promoBanners.length)}%)`, transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}>
               {promoBanners.map((banner, index) => (
                 <div key={index} style={{ width: `${100 / promoBanners.length}%`, height: '100%', backgroundImage: `${banner.gradient}, url("${banner.img}")`, backgroundSize: 'cover', backgroundPosition: 'center', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
-                  <span style={{ backgroundColor: '#FB641B', width: 'fit-content', padding: '4px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', color: '#fff' }}>FLIPKART OFFER MODE</span>
+                  <span style={{ backgroundColor: '#FB641B', width: 'fit-content', padding: '4px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', color: '#fff' }}>BAZAARIND OFFER MODE</span>
                   <h2 style={{ fontSize: '34px', margin: '0 0 8px 0', fontWeight: '900', color: '#ffffff' }}>{banner.title}</h2>
                   <p style={{ fontSize: '16px', margin: '0 0 24px 0', color: '#e0e0e0' }}>{banner.sub}</p>
                   <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '12px 35px', backgroundColor: '#2874F0', color: '#ffffff', border: 'none', borderRadius: '2px', fontWeight: 'bold', cursor: 'pointer' }}>Shop Now</button>
@@ -271,7 +304,7 @@ function App() {
               {products.slice(0, 4).map((product) => {
                 const accurateImg = resolvePristineProductImage(product.name, product.category);
                 return (
-                  <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ border: `1px solid ${theme.border}`, borderRadius: '4px', padding: '15px', textAlign: 'center', cursor: 'pointer', backgroundColor: theme.bg }}>
+                  <div key={product.id} onClick={() => { setSelectedProduct(product); setSelectedColor(0); setSelectedSize(0); setCurrentView('product-detail'); }} style={{ border: `1px solid ${theme.border}`, borderRadius: '4px', padding: '15px', textAlign: 'center', cursor: 'pointer', backgroundColor: theme.bg }}>
                     <div style={{ width: '100%', height: '110px', overflow: 'hidden', borderRadius: '4px', marginBottom: '10px', backgroundColor: theme.panel }}>
                       <img src={accurateImg} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Asset" />
                     </div>
@@ -294,7 +327,7 @@ function App() {
             {filteredProducts.map(product => {
               const accurateImg = resolvePristineProductImage(product.name, product.category);
               return (
-                <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '6px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '350px', cursor: 'pointer' }}>
+                <div key={product.id} onClick={() => { setSelectedProduct(product); setSelectedColor(0); setSelectedSize(0); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '6px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '350px', cursor: 'pointer' }}>
                   <div>
                     <div style={{ width: '100%', height: '140px', overflow: 'hidden', borderRadius: '4px', marginBottom: '12px', backgroundColor: theme.bg }}>
                       <img src={accurateImg} alt={product.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -315,6 +348,7 @@ function App() {
         </main>
       )}
 
+      {/* 🛍️ PRODUCT DESCRIPTION VIEWPORT (With Dynamic Variant Fixes) */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ padding: '30px 10%', backgroundColor: '#f1f3f6', color: '#000000', minHeight: '85vh' }}>
           <div style={{ fontSize: '12px', color: '#878787', marginBottom: '20px', fontWeight: '500' }}>
@@ -351,22 +385,21 @@ function App() {
                 <span style={{ fontSize: '16px', color: '#388e3c', fontWeight: 'bold' }}>25% Off Deal Applied</span>
               </div>
 
+              {/* 🎯 SEAMLESS DYNAMIC VARIANT CLUSTERS ROW */}
               <div style={{ borderTop: '1px solid #f0f0f0', borderBottom: '1px solid #f0f0f0', padding: '20px 0', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                  <span style={{ width: '110px', color: '#878787', fontSize: '14px', fontWeight: '500' }}>Color Option</span>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    {['Classic Charcoal', 'Pantone Metallic', 'Stealth Shadow'].map((color, idx) => (
+                  <span style={{ width: '160px', color: '#878787', fontSize: '14px', fontWeight: '500' }}>Color Option</span>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {colorOptions.map((color, idx) => (
                       <button key={color} onClick={() => setSelectedColor(idx)} style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: selectedColor === idx ? '2px solid #2874F0' : '1px solid #e0e0e0', color: selectedColor === idx ? '#2874F0' : '#212121', fontSize: '12px', fontWeight: 'bold', borderRadius: '2px', cursor: 'pointer' }}>{color}</button>
                     ))}
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <span style={{ width: '110px', color: '#878787', fontSize: '14px', fontWeight: '500' }}>Capacity / Size</span>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    {selectedProduct.category === "Electronics" ? ['128GB + 8GB', '256GB + 12GB'].map((size, idx) => (
-                      <button key={size} onClick={() => setSelectedSize(idx)} style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: selectedSize === idx ? '2px solid #2874F0' : '1px solid #e0e0e0', color: selectedSize === idx ? '#2874F0' : '#212121', fontSize: '12px', fontWeight: 'bold', borderRadius: '2px', cursor: 'pointer' }}>{size}</button>
-                    )) : ['Standard Unit Pack', 'Family Multi-Pack Bundle'].map((size, idx) => (
+                  <span style={{ width: '160px', color: '#878787', fontSize: '14px', fontWeight: '500' }}>{sizeLabel}</span>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {sizeOptions.map((size, idx) => (
                       <button key={size} onClick={() => setSelectedSize(idx)} style={{ padding: '8px 16px', backgroundColor: '#ffffff', border: selectedSize === idx ? '2px solid #2874F0' : '1px solid #e0e0e0', color: selectedSize === idx ? '#2874F0' : '#212121', fontSize: '12px', fontWeight: 'bold', borderRadius: '2px', cursor: 'pointer' }}>{size}</button>
                     ))}
                   </div>
@@ -448,17 +481,16 @@ function App() {
           <div style={{ backgroundColor: theme.panel, display: 'inline-block', padding: '50px 70px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
             <span style={{ fontSize: '60px', display: 'block' }}>✅</span>
             <h2 style={{ color: theme.action, margin: '20px 0 10px 0', fontSize: '26px', fontWeight: '900' }}>Order Processing Dispatched!</h2>
-            <p style={{ color: theme.textSecondary, fontSize: '15px', margin: '0 0 35px 0' }}>Transaction parameters successfully committed to NoSQL cluster logs.</p>
+            <p style={{ color: theme.textSecondary, fontSize: '15px', margin: '0 0 35px 0' }}>Transaction parameters successfully committed to logs.</p>
             <button onClick={() => setCurrentView('home')} style={{ padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>RETURN TO MAIN HEADER</button>
           </div>
         </div>
       )}
 
-      {/* 🛒 REUSABLE SIDEBAR OVERLAYS: MY CART FLYOUT PANEL */}
+      {/* 🛒 MY CART FLYOUT PANEL OVERLAY */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
-            
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
               <h2 style={{ margin: 0, fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
               <button onClick={() => setShowCartModal(false)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
@@ -500,15 +532,15 @@ function App() {
         </div>
       )}
 
-      {/* 📘 OFFICIAL SPLICED FLIPKART LOGIN/SIGNUP MODAL INTERFACE */}
+      {/* 📘 BAZAARIND HIGH-CONVERSION LANDING MODAL INTERFACE */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
-          <div style={{ width: '650px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
+          <div style={{ width: '650px', height: '528px', backgroundColor: '#ffffff', borderRadius: '2px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
             
             <button onClick={() => { setShowAuthModal(false); setLegalView('none'); }} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '18px', color: '#878787', cursor: 'pointer', zIndex: 10 }}>✕</button>
             
-            {/* Left Column: Iconic Brand Pane */}
-            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', color: '#ffffff' }}>
+            {/* Left Brand Panel */}
+            <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', justifyContent: 'space-between', color: '#ffffff' }}>
               <div>
                 <h2 style={{ fontSize: '24px', fontWeight: '500', margin: '0 0 16px 0' }}>
                   {legalView === 'terms' ? "Terms of Use" : legalView === 'privacy' ? "Privacy Policy" : isSignUp ? "Sign Up" : "Login"}
@@ -517,7 +549,7 @@ function App() {
                   {legalView === 'terms' 
                     ? "Review the official rules, liabilities, and legal obligations governing your access to our retail platform."
                     : legalView === 'privacy'
-                    ? "Understand how your personal details, secure transactions, and data protections are handled in India."
+                    ? "Understand how your personal details, secure transactions, and data protections are handled securely."
                     : isSignUp 
                     ? "Create an account to track your orders, manage your wishlist, and configure personalized recommendations." 
                     : "Get access to your Orders, Wishlist and Recommendations"}
@@ -526,7 +558,7 @@ function App() {
               <div style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '1px', opacity: 0.3, textAlign: 'center' }}>BazaarInd</div>
             </div>
 
-            {/* Right Column Context Swapper */}
+            {/* Right Interactive Container Swapper */}
             {legalView === 'none' ? (
               <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '56px 35px 16px 35px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
                 {authError && (
@@ -564,7 +596,7 @@ function App() {
                 </p>
               </form>
             ) : (
-              /* 📜 ACTUAL FLIPKART DOCUMENTATION TEXT SCROLL CONTAINER */
+              /* 📜 GENERALIZED DVERSIONS OF TERMS & POLICY INNER TEXT PANE */
               <div style={{ width: '60%', padding: '35px 35px 20px 35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                 
                 <div onClick={() => setLegalView('none')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '15px' }}>
@@ -574,74 +606,64 @@ function App() {
                 <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#333333', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #e0e0e0', paddingTop: '12px' }}>
                   {legalView === 'terms' ? (
                     <>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Flipkart Terms of Use [cite: 172]</h4>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Terms of Use</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        This document is an electronic record in terms of the Information Technology Act, 2000 and rules thereunder[cite: 173]. This electronic record is generated by a computer system and does not require any physical or digital signatures[cite: 173]. Published in accordance with Rule 3 (1) of the Information Technology (Intermediaries guidelines) Rules, 2021[cite: 174].
+                        Welcome to BazaarInd. By accessing or utilizing this website, applications, or marketplace services, you explicitly agree to be bound by these Terms of Use and all incorporated operational parameters.
                       </p>
                       
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Platform Ownership Parameters [cite: 174]</h4>
+                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Marketplace Services Facilitation</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        The Platform is owned by Flipkart Internet Private Limited, a company incorporated under the Companies Act, 1956 with its registered office at Buildings Alyssa, Begonia & Clover, Embassy Tech Village, Outer Ring Road, Devarabeesanahalli Village, Bengaluru - 560103, Karnataka, India. Your use indicates contract agreement to all policies[cite: 177, 179].
+                        BazaarInd operates an online e-commerce platform acting as an intermediary to connect independent sellers with buyers. All commercial agreements including pricing adjustments, shipping logistics, and item guarantees are determined directly between customers and corresponding storefront merchants.
                       </p>
                       
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Account Identifier & Obligations [cite: 190]</h4>
+                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Account Security & Verification</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Your mobile phone number and/or e-mail address is treated as Your primary identifier on the Platform[cite: 193]. You shall be responsible for maintaining the confidentiality of your Display Name and Password and all activities that occur under your profile account[cite: 191].
+                        Your registered connection identifiers serve as your primary parameters. Users accept sole accountability for maintaining password string confidentiality and protecting their private workspace profiles from unauthorized access.
                       </p>
 
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Independent Bipartite Transactions [cite: 220]</h4>
+                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Fair Usage & Platform Fees</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Flipkart is an intermediary and cannot control transactions between Platform Users[cite: 222, 683]. All commercial terms (price, delivery dates, and warranties) are offered and agreed strictly between Buyers and Sellers alone[cite: 224, 225, 446].
+                        BazaarInd reserves the right to impose nominal handling adjustments, logistic tracking infrastructure fees, or small bundle system charges. All active variations will be transparently updated in your basket prior to order placement execution.
                       </p>
 
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>4. Platform Fees & Billing Rules [cite: 281]</h4>
-                      <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Flipkart reserves the right to charge certain platform operational fees, offer handling fees, or convenience fees[cite: 293, 296, 884]. These charges are displayed to the customer transparently prior to order checkout confirmation and execution[cite: 298].
-                      </p>
-
-                      <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Legal Grievance Escalations [cite: 799]</h5>
-                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Officer:</strong> Karthik R (Associate Director) [cite: 799]</p>
-                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Address:</strong> Flipkart Internet Pvt Ltd, Block B (Begonia), 7th Floor Embassy Tech Village, Outer Ring Road, Bengaluru, 560103 [cite: 799]</p>
-                      <p style={{ margin: '0 0 12px 0', color: '#555555', fontSize: '12px' }}><strong>Email:</strong> grievance.officer@flipkart.com [cite: 799]</p>
+                      <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Grievance Redressal Support</h5>
+                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Officer:</strong> Grievance Redressal Cell</p>
+                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Address:</strong> BazaarInd Hub, Tech Park Phase 2, Outer Ring Road, Bengaluru, 560103, India</p>
+                      <p style={{ margin: '0 0 12px 0', color: '#555555', fontSize: '12px' }}><strong>Support Email:</strong> support@bazaarind.com</p>
                     </>
                   ) : (
                     <>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Flipkart Privacy Policy [cite: 2, 15]</h4>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Privacy Policy</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We value the trust you place in us and recognize the importance of secure transactions and information privacy[cite: 19]. This Privacy Policy describes how Flipkart Internet Private Limited and its affiliates collect, use, or otherwise process your personal data through the Platform[cite: 20].
+                        We place maximum priority on safeguarding user profile confidentiality and transaction integrity. This Privacy Policy details how we handle the accumulation, processing, and protection of your data elements.
                       </p>
                       
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Data Collection Categories [cite: 24]</h4>
+                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Core Data Accumulation</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We collect personal data relating to your buying behavior, browsing patterns, preferences, delivery addresses, and payment instrument records from you when you set up an account or transact with us[cite: 29, 39]. This information is utilized for internal research to tailor your experience[cite: 30, 76].
+                        We compile essential transaction attributes including identity coordinates, delivery destinations, interface timelines, and product browsing selections when you manage profiles or process items through your cart logs.
                       </p>
                       
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Sharing of Personal Records [cite: 91]</h4>
+                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Information Protection Protocols</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We may share personal data with Flipkart group companies, affiliates, business partners, and qualified sellers to assist in order fulfillment, deferred payment credit checks, or personalized promotional campaigns[cite: 34, 61, 92, 93].
+                        All recorded profile coordinates and password cipher nodes are managed inside isolated cloud network databases with complete transit encryption. No personal details are sold or distributed to third-party marketing channels without consent.
                       </p>
 
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Cookies & Analytical Anchors [cite: 77]</h4>
+                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Cookies & Session Storage</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We deploy data collection devices such as "cookies" on certain pages of the Platform to analyze web page flow, measure promotional effectiveness, and allow you to enter passwords less frequently during an active session[cite: 78, 81].
+                        Localized browser variables and cookies are utilized strictly to streamline account persistence, preserve product tracking states across system reloads, and reinforce platform session authentication gates.
                       </p>
 
-                      <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>4. Security Precautions & Server Controls [cite: 121]</h4>
-                      <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We maintain reasonable physical, electronic, and procedural safeguards to protect your data[cite: 122]. Whenever you access your account information parameters, we offer the use of secure server connections to prevent unauthorized access[cite: 123, 124].
-                      </p>
-
-                      <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Privacy Grievance Officer Contact [cite: 141]</h5>
-                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Officer:</strong> Mr Karthik R (Associate Director) [cite: 141]</p>
-                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Office:</strong> Flipkart Internet Pvt Ltd, Embassy Tech Village, 8th Floor Block 'B', Devarabeesanahalli Village, Bengaluru, 560103 [cite: 141]</p>
-                      <p style={{ margin: '0 0 12px 0', color: '#555555', fontSize: '12px' }}><strong>Email:</strong> privacy.grievance@flipkart.com [cite: 141]</p>
+                      <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Privacy Assurance Desk</h5>
+                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Desk:</strong> Integrity Operations Team</p>
+                      <p style={{ margin: '0 0 4px 0', color: '#555555', fontSize: '12px' }}><strong>Contact:</strong> BazaarInd Internet Corporate Hub, Corporate Bengaluru, India</p>
+                      <p style={{ margin: '0 0 12px 0', color: '#555555', fontSize: '12px' }}><strong>Email:</strong> privacy@bazaarind.com</p>
                     </>
                   )}
                 </div>
 
                 <button 
                   onClick={() => setLegalView('none')} 
-                  style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '40px', borderRadius: '2px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', marginTop: '15px', textTransform: 'uppercase' }}
+                  style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '#40px', borderRadius: '2px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', marginTop: '15px', textTransform: 'uppercase' }}
                 >
                   Acknowledge and Return
                 </button>
