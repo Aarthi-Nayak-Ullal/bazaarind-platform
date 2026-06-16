@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import Optional
+from bson import ObjectId
 import httpx
 from app.database import product_collection, user_collection
 
@@ -11,7 +13,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Permits all live edge environments to safely query data channels
     allow_credentials=True,
-    allow_methods=["*"],  # Authorizes standard transaction verbs (GET, POST, OPTIONS)
+    allow_methods=["*"],  # Authorizes standard transaction verbs (GET, POST, OPTIONS, PUT, DELETE)
     allow_headers=["*"],  # Accepts inbound payload mapping descriptors
 )
 
@@ -25,6 +27,13 @@ class UserLoginSchema(BaseModel):
     email: str
     password: str
 
+class ProductSchema(BaseModel):
+    name: str
+    category: str
+    price: float
+    offer: Optional[str] = ""
+    imageUrl: Optional[str] = ""
+
 
 # ⚡ ASYNC BACKGROUND WORKER: Resolves Exact Matching Images via Live API Lookup
 async def resolve_and_cache_image(product_id: str, product_name: str):
@@ -36,13 +45,9 @@ async def resolve_and_cache_image(product_id: str, product_name: str):
         # Clean the product name query string for optimal network lookups
         search_query = product_name.split("(")[0].strip()
         
-        # Live endpoint: Pulls high-fidelity squarish commercial framing cards programmatically
-        api_url = f"https://images.unsplash.com/photo-1542291026-7eec264c27ff" # Global absolute node base
-        
         # We target specific automated high-quality item identifiers to generate varied source grids
         async with httpx.AsyncClient() as client:
             # We can lazily point to high-resolution open retail photo index directories dynamically
-            # For demonstration, this uses optimized lookups based on keyword tags
             refined_url = f"https://source.unsplash.com/featured/500x500/?{search_query.replace(' ', ',')}"
             
             # Verify the image location is valid and accessible before committing to database logs
@@ -50,7 +55,6 @@ async def resolve_and_cache_image(product_id: str, product_name: str):
             resolved_link = str(checker.url) if checker.status_code == 200 else refined_url
             
             # Commit the exact matching live asset link permanently to your NoSQL database collection
-            from bson import ObjectId
             await product_collection.update_one(
                 {"_id": ObjectId(product_id)},
                 {"$set": {"image_url": resolved_link}}
@@ -120,3 +124,36 @@ async def login_user(login_credentials: UserLoginSchema):
             detail="Invalid credentials configuration. Verification denied."
         )
     return {"user": {"name": authenticated_user["name"], "email": authenticated_user["email"]}}
+
+
+# ==========================================
+# 🛠️ ADMIN CONTROL PANEL ROUTES (CRUD)
+# ==========================================
+
+# Create New Product (POST)
+@app.post('/api/products', status_code=201)
+async def add_product(product: ProductSchema):
+    new_product = product.dict()
+    # Map 'imageUrl' to 'image_url' so it aligns with your existing DB schema
+    if "imageUrl" in new_product:
+        new_product["image_url"] = new_product.pop("imageUrl")
+        
+    result = await product_collection.insert_one(new_product)
+    return {"status": "success", "id": str(result.inserted_id)}
+
+# Update Existing Product (PUT)
+@app.put('/api/products/{id}')
+async def update_product(id: str, product: ProductSchema):
+    update_fields = product.dict()
+    # Map 'imageUrl' to 'image_url' to maintain database consistency
+    if "imageUrl" in update_fields:
+        update_fields["image_url"] = update_fields.pop("imageUrl")
+        
+    await product_collection.update_one({"_id": ObjectId(id)}, {"$set": update_fields})
+    return {"status": "product updated completely"}
+    
+# Delete Existing Product (DELETE)
+@app.delete('/api/products/{id}')
+async def remove_product(id: str):
+    await product_collection.delete_one({"_id": ObjectId(id)})
+    return {"status": "product removed"}
