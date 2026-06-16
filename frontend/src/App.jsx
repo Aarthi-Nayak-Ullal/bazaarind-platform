@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 function App() {
   // Navigation & Core System State Vectors
-  const [currentView, setCurrentView] = useState('home') // 'home', 'catalog', 'product-detail', 'checkout', 'order-success'
+  const [currentView, setCurrentView] = useState('home') // 'home', 'catalog', 'product-detail', 'checkout', 'order-success', 'admin'
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('All')
@@ -20,6 +20,7 @@ function App() {
 
   // User Space Authentication Registers
   const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false) // Added Admin State
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' })
@@ -172,7 +173,12 @@ function App() {
   // COLD BOOT: Instantly show authentication modal popup on load if user is a guest
   useEffect(() => {
     const savedUser = localStorage.getItem('bazaarUser')
-    if (savedUser) {
+    const savedAdminStatus = localStorage.getItem('bazaarAdmin')
+    
+    if (savedAdminStatus === 'true') {
+      setIsAdmin(true);
+      setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
+    } else if (savedUser) {
       setUser(JSON.parse(savedUser))
     } else {
       setShowAuthModal(true)
@@ -208,6 +214,17 @@ function App() {
   const handleAuthSubmit = async (e) => {
     e.preventDefault()
     setAuthError('')
+
+    // ADMIN ACCESS GATE
+    if (authForm.email === 'aarthinayaku@gmail.com' && authForm.password === '141503') {
+      setIsAdmin(true);
+      setUser({ name: 'Admin', email: authForm.email });
+      localStorage.setItem('bazaarAdmin', 'true');
+      setShowAuthModal(false);
+      setCurrentView('admin'); // Directly route to admin
+      return;
+    }
+
     const endpoint = isSignUp ? 'register' : 'login'
     try {
       const response = await fetch(`https://bazaarind-backend.onrender.com/api/${endpoint}`, {
@@ -238,6 +255,34 @@ function App() {
       setCurrentView('checkout')
     }
   }
+
+  // --- ADMIN HELPER FUNCTIONS ---
+  const updateProductPrice = async (id, newPrice) => {
+    try {
+      await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ price: Number(newPrice) })
+      });
+      // Update local state to reflect changes instantly without reloading
+      setProducts(products.map(p => p.id === id ? { ...p, price: Number(newPrice) } : p));
+      alert("Price updated successfully!");
+    } catch (err) {
+      console.error("Failed to update price", err);
+    }
+  };
+  
+  const removeProduct = async (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
+        // Update local state to remove the product instantly
+        setProducts(products.filter(p => p.id !== id));
+      } catch (err) {
+        console.error("Failed to delete product", err);
+      }
+    }
+  };
 
   const addToCart = (product) => setCart([...cart, product])
   const removeFromCart = (idx) => setCart(cart.filter((_, i) => i !== idx))
@@ -328,7 +373,13 @@ function App() {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '30px', fontWeight: 'bold' }}>
-          {user ? (
+          {isAdmin ? (
+             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+             <span style={{ fontSize: '13px', color: '#ef4444' }}>Admin Mode</span>
+             <button onClick={() => setCurrentView('admin')} style={{ background: theme.accent, border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Control Panel</button>
+             <button onClick={() => { localStorage.removeItem('bazaarAdmin'); setIsAdmin(false); setUser(null); setCurrentView('home'); }} style={{ background: 'none', border: `1px solid ${theme.accent}`, color: theme.accent, padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Disconnect</button>
+           </div>
+          ) : user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
               <span style={{ fontSize: '13px', color: theme.action }}>Secure User: {user.name}</span>
               <button onClick={() => { localStorage.removeItem('bazaarUser'); setUser(null); setCurrentView('home'); }} style={{ background: 'none', border: `1px solid ${theme.accent}`, color: theme.accent, padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Disconnect</button>
@@ -490,14 +541,14 @@ function App() {
               <div style={{ marginBottom: '25px' }}>
                 <h4 style={{ fontSize: '16px', fontWeight: '500', color: '#212121', margin: '0 0 12px 0' }}>Available Bank Network Offers</h4>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#212121' }}>
-                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Bank Offer:</strong> Extra 10% off on AXIS Bank Credit Card transactions, up to ₹1,250. [cite: 93]</li>
-                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Partner Offer:</strong> Sign up for BazaarInd Premium to unlock free automated checkout shipping buffers. [cite: 115]</li>
+                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Bank Offer:</strong> Extra 10% off on AXIS Bank Credit Card transactions, up to ₹1,250.</li>
+                  <li>🏷️ <strong style={{ color: '#388e3c' }}>Partner Offer:</strong> Sign up for BazaarInd Premium to unlock free automated checkout shipping buffers.</li>
                 </ul>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', fontSize: '14px', color: '#212121', backgroundColor: '#f9f9f9', padding: '12px 16px', borderRadius: '2px', border: '1px solid #e0e0e0' }}>
                 <span style={{ color: '#878787', width: '110px', fontWeight: '500' }}>Delivery Context</span>
-                <div>Delivery by <strong style={{ color: '#388e3c' }}>{deliveryDateString}</strong> | <span style={{ color: '#388e3c', fontWeight: 'bold' }}>FREE Express Routing</span> [cite: 556]</div>
+                <div>Delivery by <strong style={{ color: '#388e3c' }}>{deliveryDateString}</strong> | <span style={{ color: '#388e3c', fontWeight: 'bold' }}>FREE Express Routing</span></div>
               </div>
             </div>
           </div>
@@ -536,7 +587,7 @@ function App() {
                   ))}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
-                  <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'none', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK</button>
+                  <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK</button>
                   <button onClick={() => { setCart([]); setCurrentView('order-success'); }} style={{ padding: '12px 35px', backgroundColor: theme.action, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>EXECUTE TRANSACTION</button>
                 </div>
               </div>
@@ -547,7 +598,7 @@ function App() {
             <h4 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', color: theme.textSecondary, fontSize: '12px' }}>PRICE COMPILATION LOG</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', borderBottom: `1px dashed ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal Allocation</span><span>₹{calculateTotal().toLocaleString('en-IN')}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 10%' }}><span>Network Shipping Bus</span><span style={{ color: theme.action }}>FREE</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0' }}><span>Network Shipping Bus</span><span style={{ color: theme.action }}>FREE</span></div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '16px' }}>
               <span>Total Bill:</span><span style={{ color: theme.accent }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
@@ -566,6 +617,49 @@ function App() {
             <button onClick={() => setCurrentView('home')} style={{ padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>RETURN TO MAIN HEADER</button>
           </div>
         </div>
+      )}
+
+      {/* 3.6 ADMIN CONTROL PANEL VIEW */}
+      {currentView === 'admin' && isAdmin && (
+        <main style={{ padding: '40px 10%', backgroundColor: theme.bg, color: theme.textPrimary, minHeight: '85vh' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ color: theme.accent, margin: '0 0 5px 0' }}>BazaarInd Control Panel</h1>
+              <p style={{ color: theme.textSecondary, fontSize: '14px', margin: 0 }}>Product Database Management Node</p>
+            </div>
+            <button onClick={() => setCurrentView('home')} style={{ padding: '10px 20px', backgroundColor: theme.panel, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Back to Storefront</button>
+          </div>
+          
+          <div style={{ display: 'grid', gap: '15px' }}>
+            {products.map(product => (
+              <div key={product.id} style={{ display: 'flex', gap: '20px', padding: '20px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
+                <div style={{ width: '50px', height: '50px', overflow: 'hidden', borderRadius: '4px', backgroundColor: theme.bg, flexShrink: 0 }}>
+                  <img src={resolvePristineProductImage(product.name, product.category)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Thumb" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '15px', display: 'block' }}>{product.name}</span>
+                  <span style={{ color: theme.textSecondary, fontSize: '12px' }}>{product.category} | ID: {product.id}</span>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Price (₹):</span>
+                  <input 
+                    type="number" 
+                    defaultValue={product.price} 
+                    onBlur={(e) => updateProductPrice(product.id, e.target.value)} 
+                    style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', width: '100px', outline: 'none' }}
+                  />
+                </div>
+                <button onClick={() => removeProduct(product.id)} style={{ padding: '10px 20px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Delete</button>
+              </div>
+            ))}
+            {products.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px', color: theme.textSecondary, border: `1px dashed ${theme.border}`, borderRadius: '6px' }}>
+                No active products remaining in the database node.
+              </div>
+            )}
+          </div>
+        </main>
       )}
 
       {/* 🛒 MY CART FLYOUT PANEL OVERLAY */}
@@ -688,24 +782,24 @@ function App() {
                 <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#333333', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #e0e0e0', paddingTop: '12px' }}>
                   {legalView === 'terms' ? (
                     <>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Terms of Use [cite: 172]</h4>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Terms of Use</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Welcome to BazaarInd. By accessing or utilizing this website, applications, or marketplace services, you explicitly agree to be bound by these Terms of Use and all incorporated operational parameters[cite: 177].
+                        Welcome to BazaarInd. By accessing or utilizing this website, applications, or marketplace services, you explicitly agree to be bound by these Terms of Use and all incorporated operational parameters.
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Marketplace Services Facilitation</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        BazaarInd operates an online e-commerce platform acting as an intermediary to connect independent sellers with buyers[cite: 221, 222]. All commercial agreements including pricing adjustments, shipping logistics, and item guarantees are determined directly between customers and corresponding storefront merchants[cite: 224, 225].
+                        BazaarInd operates an online e-commerce platform acting as an intermediary to connect independent sellers with buyers. All commercial agreements including pricing adjustments, shipping logistics, and item guarantees are determined directly between customers and corresponding storefront merchants.
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Account Security & Verification</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Your registered connection identifiers serve as your primary parameters[cite: 193]. Users accept sole accountability for maintaining password string confidentiality and protecting their private workspace profiles from unauthorized access[cite: 191].
+                        Your registered connection identifiers serve as your primary parameters. Users accept sole accountability for maintaining password string confidentiality and protecting their private workspace profiles from unauthorized access.
                       </p>
 
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Fair Usage & Platform Fees</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        BazaarInd reserves the right to impose nominal handling adjustments, logistic tracking infrastructure fees, or small bundle system charges[cite: 294, 297]. All active variations will be transparently updated in your basket prior to order placement execution[cite: 298].
+                        BazaarInd reserves the right to impose nominal handling adjustments, logistic tracking infrastructure fees, or small bundle system charges. All active variations will be transparently updated in your basket prior to order placement execution.
                       </p>
 
                       <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Grievance Redressal Support</h5>
@@ -715,24 +809,24 @@ function App() {
                     </>
                   ) : (
                     <>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Privacy Policy [cite: 15]</h4>
+                      <h4 style={{ margin: '0 0 4px 0', color: '#212121', fontWeight: 'bold' }}>BazaarInd Privacy Policy</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We place maximum priority on safeguarding user profile confidentiality and transaction integrity[cite: 19]. This Privacy Policy details how we handle the accumulation, processing, and protection of your data elements[cite: 20].
+                        We place maximum priority on safeguarding user profile confidentiality and transaction integrity. This Privacy Policy details how we handle the accumulation, processing, and protection of your data elements.
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>1. Core Data Accumulation</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        We compile essential transaction attributes including identity coordinates, delivery destinations, interface timelines, and product browsing selections when you manage profiles or process items through your cart logs[cite: 29, 39].
+                        We compile essential transaction attributes including identity coordinates, delivery destinations, interface timelines, and product browsing selections when you manage profiles or process items through your cart logs.
                       </p>
                       
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>2. Information Protection Protocols</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        All recorded profile coordinates and password cipher nodes are managed inside isolated cloud network databases with complete transit encryption[cite: 122, 123]. No personal details are sold or distributed to third-party marketing channels without consent[cite: 526].
+                        All recorded profile coordinates and password cipher nodes are managed inside isolated cloud network databases with complete transit encryption. No personal details are sold or distributed to third-party marketing channels without consent.
                       </p>
 
                       <h4 style={{ margin: '12px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>3. Cookies & Session Storage</h4>
                       <p style={{ margin: '0 0 12px 0', color: '#666666', fontSize: '12px' }}>
-                        Localized browser variables and cookies are utilized strictly to streamline account persistence, preserve product tracking states across system reloads, and reinforce platform session authentication gates[cite: 78, 81].
+                        Localized browser variables and cookies are utilized strictly to streamline account persistence, preserve product tracking states across system reloads, and reinforce platform session authentication gates.
                       </p>
 
                       <h5 style={{ margin: '16px 0 4px 0', color: '#212121', fontWeight: 'bold' }}>Privacy Assurance Desk</h5>
