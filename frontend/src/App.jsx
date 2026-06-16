@@ -13,6 +13,7 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedColor, setSelectedColor] = useState(0)
   const [selectedSize, setSelectedSize] = useState(0)
+  const [activeImageIndex, setActiveImageIndex] = useState(1) // Tracks the active thumbnail
 
   // Dynamic Real-Time Calendar Strings
   const [systemDate, setSystemDate] = useState('')
@@ -318,12 +319,7 @@ function App() {
           <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '10px', backgroundColor: theme.accent, color: '#fff', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', zIndex: 10 }}>
             🟢 LIVE STOREFRONT PREVIEW
           </div>
-          {/* Iframe pointing to itself to show the live site state safely without logging in as admin */}
-          <iframe 
-            src={window.location.origin} 
-            title="Live Preview" 
-            style={{ width: '100%', height: '100%', border: 'none', paddingTop: '34px' }}
-          />
+          <iframe src={window.location.origin} title="Live Preview" style={{ width: '100%', height: '100%', border: 'none', paddingTop: '34px' }} />
         </div>
       </div>
     );
@@ -440,36 +436,104 @@ function App() {
         </main>
       )}
 
+      {/* REBUILT FLIPKART-STYLE PRODUCT DETAIL VIEWPORT */}
       {currentView === 'product-detail' && selectedProduct && (
-        <main style={{ padding: '30px 10%', backgroundColor: '#f1f3f6', color: '#000000', minHeight: '85vh' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
-            <button onClick={() => setCurrentView('catalog')} style={{ padding: '6px 12px', backgroundColor: '#ffffff', border: '1px solid #e0e0e0', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>← Back to Catalog</button>
-            <div style={{ fontSize: '12px', color: '#878787', fontWeight: '500' }}>Home &gt; {selectedProduct.category} &gt; <span style={{ color: '#212121' }}>{selectedProduct.name}</span></div>
+        <main style={{ padding: '20px 10%', backgroundColor: '#ffffff', color: '#000000', minHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+          {/* Breadcrumbs */}
+          <div style={{ fontSize: '12px', color: '#878787', marginBottom: '15px' }}>
+            <span style={{cursor:'pointer'}} onClick={() => setCurrentView('home')}>Home</span> &gt; <span style={{cursor:'pointer'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> &gt; <span style={{ color: '#878787' }}>{selectedProduct.name}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '24px', backgroundColor: '#ffffff', padding: '24px', borderRadius: '2px', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.1)' }}>
-            <div style={{ width: '40%', display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'sticky', top: '100px', height: 'fit-content' }}>
-              <div style={{ width: '100%', height: '400px', border: '1px solid #f0f0f0', borderRadius: '2px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', padding: '16px', boxSizing: 'border-box' }}>
-                <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} alt="Packshot View" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', gap: '30px' }}>
+            {/* LEFT COLUMN - Gallery & Action Bus */}
+            <div style={{ width: '40%', display: 'flex', flexDirection: 'column', position: 'sticky', top: '80px', height: 'fit-content' }}>
+              <div style={{ display: 'flex', gap: '10px', height: '450px' }}>
+                {/* Vertical Thumbnail Deck */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '64px', overflowY: 'auto' }}>
+                  {[1, 2, 3, 4].map((idx) => (
+                    <div key={idx} onMouseEnter={() => setActiveImageIndex(idx)} style={{ width: '64px', height: '64px', border: activeImageIndex === idx ? '2px solid #2874F0' : '1px solid #f0f0f0', padding: '2px', cursor: 'pointer', boxSizing: 'border-box' }}>
+                      <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="thumb" />
+                    </div>
+                  ))}
+                </div>
+                {/* Main Active Viewport */}
+                <div style={{ flex: 1, border: '1px solid #f0f0f0', padding: '20px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt="Main Product" />
+                  <div style={{ position: 'absolute', top: '15px', right: '15px', width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#fff', border: '1px solid #f0f0f0', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#c2c2c2', cursor: 'pointer', fontSize: '18px', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.1)' }}>❤</div>
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', marginTop: '16px' }}>
-                <button onClick={() => addToCart(selectedProduct)} style={{ height: '56px', backgroundColor: '#ff9f00', color: '#ffffff', border: 'none', fontWeight: 'bold', fontSize: '16px', borderRadius: '2px', cursor: 'pointer' }}>🛒 ADD TO CART</button>
-                <button onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} style={{ height: '56px', backgroundColor: '#fb641b', color: '#ffffff', border: 'none', fontWeight: 'bold', fontSize: '16px', borderRadius: '2px', cursor: 'pointer' }}>⚡ BUY NOW</button>
+
+              {/* Transaction Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <button onClick={() => addToCart(selectedProduct)} style={{ flex: 1, padding: '16px 0', backgroundColor: '#ff9f00', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.004-.05-.004-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86" fill="#fff"></path></svg>
+                  ADD TO CART
+                </button>
+                <button onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} style={{ flex: 1, padding: '16px 0', backgroundColor: '#fb641b', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
+                  <svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M11.666 12.336l-1.996-3.79 3.018-2.65L7.33 4.88 5.667 1.33 4.004 4.88 1.332 5.895l3.018 2.65-1.995 3.79 4.312-1.996 4.312 1.996h-.313z" fill="#fff"></path></svg>
+                  BUY NOW
+                </button>
               </div>
             </div>
 
-            <div style={{ width: '60%', paddingLeft: '12px', boxSizing: 'border-box' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: '400', color: '#212121', margin: '0 0 8px 0', lineHeight: '1.4' }}>{selectedProduct.name}</h2>
+            {/* RIGHT COLUMN - Metadata & Specs */}
+            <div style={{ width: '60%', paddingLeft: '15px' }}>
+              <h1 style={{ fontSize: '18px', fontWeight: '400', color: '#212121', margin: '0 0 10px 0', lineHeight: '1.4' }}>{selectedProduct.name}</h1>
+
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                <span style={{ backgroundColor: '#388e3c', color: '#ffffff', fontSize: '12px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px' }}>4.3 ★</span>
-                <span style={{ fontSize: '14px', color: '#878787', fontWeight: '500' }}>2,972 Ratings & 415 Reviews</span>
+                <span style={{ backgroundColor: '#388e3c', color: '#ffffff', fontSize: '12px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}>4.3 ★</span>
+                <span style={{ fontSize: '14px', color: '#878787', fontWeight: '500' }}>1,917 Ratings & 234 Reviews</span>
                 <span style={{ color: '#2874F0', fontSize: '14px', fontWeight: 'bold' }}>Assured Partner Verified</span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '5px' }}>
                 <span style={{ fontSize: '28px', fontWeight: '500', color: '#212121' }}>₹{selectedProduct.price.toLocaleString('en-IN')}</span>
                 <span style={{ fontSize: '16px', color: '#878787', textDecoration: 'line-through' }}>₹{(Math.floor(selectedProduct.price * 1.35)).toLocaleString('en-IN')}</span>
-                <span style={{ fontSize: '16px', color: '#388e3c', fontWeight: 'bold' }}>{selectedProduct.offer || "Special Pricing Applied"}</span>
+                <span style={{ fontSize: '16px', color: '#388e3c', fontWeight: 'bold' }}>{selectedProduct.offer || "Special Price"}</span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#212121', marginBottom: '25px' }}>+ ₹86 Protect Promise Fee</div>
+
+              {/* Offers List */}
+              <div style={{ marginBottom: '25px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#212121', marginBottom: '10px' }}>Available offers</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}><span style={{ color: '#388e3c', fontWeight: 'bold' }}>🏷️</span> <span><strong style={{fontWeight: 600}}>Bank Offer</strong> 5% Cashback on BazaarInd Axis Bank Card</span></div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}><span style={{ color: '#388e3c', fontWeight: 'bold' }}>🏷️</span> <span><strong style={{fontWeight: 600}}>Special Price</strong> Get extra 10% off (price inclusive of cashback/coupon)</span></div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}><span style={{ color: '#388e3c', fontWeight: 'bold' }}>🏷️</span> <span><strong style={{fontWeight: 600}}>Partner Offer</strong> Make a purchase and enjoy a surprise cashback/ coupon that you can redeem later!</span></div>
+                </div>
+              </div>
+
+              {/* Delivery, Highlights & Seller Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '20px', fontSize: '14px', borderTop: '1px solid #f0f0f0', paddingTop: '20px' }}>
+                <div style={{ color: '#878787', fontWeight: '500' }}>Delivery</div>
+                <div>
+                  <div style={{ display: 'flex', gap: '10px', borderBottom: '2px solid #2874F0', width: 'fit-content', paddingBottom: '4px', marginBottom: '10px' }}>
+                    <span style={{ color: '#2874F0' }}>📍</span>
+                    <input type="text" defaultValue="560001" style={{ border: 'none', outline: 'none', fontWeight: '500', width: '80px', color: '#212121' }} />
+                    <span style={{ color: '#2874F0', fontWeight: '500', cursor: 'pointer' }}>Change</span>
+                  </div>
+                  <p style={{ fontWeight: '500', margin: '0 0 5px 0' }}>Delivery by {deliveryDateString} | <span style={{ color: '#388e3c' }}>Free</span> <span style={{ color: '#878787', textDecoration: 'line-through' }}>₹40</span></p>
+                  <p style={{ color: '#878787', margin: 0, fontSize: '12px' }}>Order within 02h 00m 03s</p>
+                </div>
+
+                <div style={{ color: '#878787', fontWeight: '500' }}>Highlights</div>
+                <div>
+                  <ul style={{ margin: 0, paddingLeft: '16px', color: '#212121', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <li>Engineered for High Performance</li>
+                    <li>Extended Usage Durability</li>
+                    <li>1 Year Manufacturer Warranty</li>
+                    <li>Cash on Delivery available</li>
+                  </ul>
+                </div>
+
+                <div style={{ color: '#878787', fontWeight: '500' }}>Seller</div>
+                <div>
+                  <div style={{ color: '#2874F0', fontWeight: '500', marginBottom: '5px' }}>SuperComNet <span style={{ backgroundColor: '#2874F0', color: '#fff', fontSize: '10px', padding: '2px 4px', borderRadius: '8px', marginLeft: '5px' }}>4.8 ★</span></div>
+                  <ul style={{ margin: 0, paddingLeft: '16px', color: '#212121', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <li>7 Days Service Center Replacement/Repair</li>
+                    <li>GST invoice available</li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
