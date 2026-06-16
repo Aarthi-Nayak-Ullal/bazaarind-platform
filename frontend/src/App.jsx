@@ -52,17 +52,34 @@ function App() {
     { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
   ]
 
+  // EXPANDED IMAGE RESOLUTION ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && customUrl.trim() !== '') return customUrl;
     const lower = name.toLowerCase();
     
+    // 1. Keyword Specific Matching (Highest Priority)
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('smartphone') || lower.includes('5g')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('smartwatch') || lower.includes('watch')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('earbuds') || lower.includes('tws')) return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('keyboard')) return "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('shoe') || lower.includes('sneaker')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('dumbbell') || lower.includes('gym') || lower.includes('weight')) return "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('football') || lower.includes('ball')) return "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('mat') || lower.includes('yoga')) return "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('kettle') || lower.includes('cooker') || lower.includes('grinder')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80";
+
+    // 2. Category Level Fallbacks
+    if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
+    if (category === "Footwear") return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (category === "Fitness & Lifestyle") return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80";
+    if (category === "Home & Kitchen") return "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80";
+    if (category === "Groceries") return "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80";
+    if (category === "Apparel") return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80";
     if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
-    return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
+    
+    // 3. Absolute Default (Generic Shopping Cart/Boxes)
+    return "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80";
   };
 
   useEffect(() => {
@@ -415,7 +432,6 @@ function App() {
         </main>
       )}
 
-      {/* REBUILT PRODUCT DETAIL VIEWPORT */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ padding: '20px 10%', backgroundColor: '#ffffff', color: '#000000', minHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
           
@@ -638,7 +654,6 @@ function App() {
                 </p>
               </div>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
-                 {/* Replaced Flipkart image with a clean, unbranded generic SVG shopping bag graphic */}
                  <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                    <line x1="3" y1="6" x2="21" y2="6"></line>
