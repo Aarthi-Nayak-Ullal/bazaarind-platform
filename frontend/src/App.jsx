@@ -415,6 +415,7 @@ function App() {
         </main>
       )}
 
+      {/* REBUILT PRODUCT DETAIL VIEWPORT */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ padding: '20px 10%', backgroundColor: '#ffffff', color: '#000000', minHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
           
@@ -579,6 +580,7 @@ function App() {
         </div>
       )}
 
+      {/* FLYOUT MODALS */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
@@ -636,7 +638,12 @@ function App() {
                 </p>
               </div>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
-                 <img src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-cp-zion/img/login_img_c4a81e.png" alt="Login Graphic" style={{ width: '100%', objectFit: 'contain' }} />
+                 {/* Replaced Flipkart image with a clean, unbranded generic SVG shopping bag graphic */}
+                 <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                   <line x1="3" y1="6" x2="21" y2="6"></line>
+                   <path d="M16 10a4 4 0 0 1-8 0"></path>
+                 </svg>
               </div>
             </div>
 
