@@ -13,7 +13,7 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedColor, setSelectedColor] = useState(0)
   const [selectedSize, setSelectedSize] = useState(0)
-  const [activeImageIndex, setActiveImageIndex] = useState(1) // Tracks the active thumbnail
+  const [activeImageIndex, setActiveImageIndex] = useState(1)
 
   // Dynamic Real-Time Calendar Strings
   const [systemDate, setSystemDate] = useState('')
@@ -83,7 +83,7 @@ function App() {
 
   // COLD BOOT WITH IFRAME DETECTION
   useEffect(() => {
-    const isIframe = window !== window.top; // Detect if running inside the preview window
+    const isIframe = window !== window.top; 
     const savedUser = localStorage.getItem('bazaarUser')
     const savedAdminStatus = localStorage.getItem('bazaarAdmin')
     
@@ -192,7 +192,6 @@ function App() {
         alert("New product created!");
       }
       
-      // Reset Form
       setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' });
       setIsEditing(false);
     } catch (err) {
@@ -252,8 +251,6 @@ function App() {
   if (currentView === 'admin' && isAdmin) {
     return (
       <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: theme.bg, color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
-        
-        {/* LEFT PANE: COMMAND CENTER */}
         <div style={{ width: '55%', overflowY: 'auto', padding: '30px', borderRight: `2px solid ${theme.border}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
             <div>
@@ -263,38 +260,25 @@ function App() {
             <button onClick={() => setCurrentView('home')} style={{ padding: '8px 16px', backgroundColor: theme.panel, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Exit Admin</button>
           </div>
 
-          {/* CRUD Form */}
           <div style={{ backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, marginBottom: '30px' }}>
             <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
               {isEditing ? `Editing Product: ${adminForm.id}` : 'Create New Product Record'}
             </h3>
             <form onSubmit={handleAdminSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               <input required type="text" placeholder="Product Title" value={adminForm.name} onChange={e => setAdminForm({...adminForm, name: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              
               <select value={adminForm.category} onChange={e => setAdminForm({...adminForm, category: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }}>
-                {categoryIcons.filter(c => c.name !== 'All').map(cat => (
-                  <option key={cat.name} value={cat.name}>{cat.name}</option>
-                ))}
+                {categoryIcons.filter(c => c.name !== 'All').map(cat => (<option key={cat.name} value={cat.name}>{cat.name}</option>))}
               </select>
-
               <input required type="number" placeholder="Price (₹)" value={adminForm.price} onChange={e => setAdminForm({...adminForm, price: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              
               <input type="text" placeholder="Promotional Offer Text (e.g., Flat 50% Off)" value={adminForm.offer} onChange={e => setAdminForm({...adminForm, offer: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-
               <input type="text" placeholder="Custom Image URL (Leave blank for default system image)" value={adminForm.imageUrl} onChange={e => setAdminForm({...adminForm, imageUrl: e.target.value})} style={{ gridColumn: 'span 2', padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-
               <div style={{ gridColumn: 'span 2', display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: theme.action, color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>
-                  {isEditing ? 'COMMIT UPDATES' : 'INJECT NEW RECORD'}
-                </button>
-                {isEditing && (
-                  <button type="button" onClick={() => { setIsEditing(false); setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); }} style={{ padding: '12px 20px', backgroundColor: theme.bg, color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
-                )}
+                <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: theme.action, color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>{isEditing ? 'COMMIT UPDATES' : 'INJECT NEW RECORD'}</button>
+                {isEditing && <button type="button" onClick={() => { setIsEditing(false); setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); }} style={{ padding: '12px 20px', backgroundColor: theme.bg, color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>}
               </div>
             </form>
           </div>
           
-          {/* Active Product Ledger */}
           <h3 style={{ margin: '0 0 15px 0' }}>Active Registry Nodes ({products.length})</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {products.map(product => (
@@ -304,7 +288,6 @@ function App() {
                   <span style={{ fontWeight: 'bold', fontSize: '14px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</span>
                   <span style={{ color: theme.accent, fontSize: '12px', fontWeight: 'bold' }}>₹{product.price}</span> | <span style={{ color: theme.textSecondary, fontSize: '11px' }}>{product.category}</span>
                 </div>
-                
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button onClick={() => handleEditClick(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
                   <button onClick={() => removeProduct(product.id)} style={{ padding: '8px 12px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Del</button>
@@ -313,12 +296,8 @@ function App() {
             ))}
           </div>
         </div>
-
-        {/* RIGHT PANE: LIVE STOREFRONT PREVIEW WINDOW */}
         <div style={{ width: '45%', height: '100%', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '10px', backgroundColor: theme.accent, color: '#fff', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', zIndex: 10 }}>
-            🟢 LIVE STOREFRONT PREVIEW
-          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '10px', backgroundColor: theme.accent, color: '#fff', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', zIndex: 10 }}>🟢 LIVE STOREFRONT PREVIEW</div>
           <iframe src={window.location.origin} title="Live Preview" style={{ width: '100%', height: '100%', border: 'none', paddingTop: '34px' }} />
         </div>
       </div>
@@ -436,19 +415,22 @@ function App() {
         </main>
       )}
 
-      {/* REBUILT FLIPKART-STYLE PRODUCT DETAIL VIEWPORT */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ padding: '20px 10%', backgroundColor: '#ffffff', color: '#000000', minHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
-          {/* Breadcrumbs */}
-          <div style={{ fontSize: '12px', color: '#878787', marginBottom: '15px' }}>
-            <span style={{cursor:'pointer'}} onClick={() => setCurrentView('home')}>Home</span> &gt; <span style={{cursor:'pointer'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> &gt; <span style={{ color: '#878787' }}>{selectedProduct.name}</span>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
+            <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back to Catalog
+            </button>
+            <div style={{ fontSize: '12px', color: '#878787', borderLeft: '1px solid #e0e0e0', paddingLeft: '20px' }}>
+              <span style={{cursor:'pointer'}} onClick={() => setCurrentView('home')}>Home</span> &gt; <span style={{cursor:'pointer'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> &gt; <span style={{ color: '#878787' }}>{selectedProduct.name}</span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '30px' }}>
-            {/* LEFT COLUMN - Gallery & Action Bus */}
             <div style={{ width: '40%', display: 'flex', flexDirection: 'column', position: 'sticky', top: '80px', height: 'fit-content' }}>
               <div style={{ display: 'flex', gap: '10px', height: '450px' }}>
-                {/* Vertical Thumbnail Deck */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '64px', overflowY: 'auto' }}>
                   {[1, 2, 3, 4].map((idx) => (
                     <div key={idx} onMouseEnter={() => setActiveImageIndex(idx)} style={{ width: '64px', height: '64px', border: activeImageIndex === idx ? '2px solid #2874F0' : '1px solid #f0f0f0', padding: '2px', cursor: 'pointer', boxSizing: 'border-box' }}>
@@ -456,14 +438,12 @@ function App() {
                     </div>
                   ))}
                 </div>
-                {/* Main Active Viewport */}
                 <div style={{ flex: 1, border: '1px solid #f0f0f0', padding: '20px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt="Main Product" />
                   <div style={{ position: 'absolute', top: '15px', right: '15px', width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#fff', border: '1px solid #f0f0f0', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#c2c2c2', cursor: 'pointer', fontSize: '18px', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.1)' }}>❤</div>
                 </div>
               </div>
 
-              {/* Transaction Action Buttons */}
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                 <button onClick={() => addToCart(selectedProduct)} style={{ flex: 1, padding: '16px 0', backgroundColor: '#ff9f00', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.004-.05-.004-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86" fill="#fff"></path></svg>
@@ -476,7 +456,6 @@ function App() {
               </div>
             </div>
 
-            {/* RIGHT COLUMN - Metadata & Specs */}
             <div style={{ width: '60%', paddingLeft: '15px' }}>
               <h1 style={{ fontSize: '18px', fontWeight: '400', color: '#212121', margin: '0 0 10px 0', lineHeight: '1.4' }}>{selectedProduct.name}</h1>
 
@@ -493,7 +472,6 @@ function App() {
               </div>
               <div style={{ fontSize: '12px', color: '#212121', marginBottom: '25px' }}>+ ₹86 Protect Promise Fee</div>
 
-              {/* Offers List */}
               <div style={{ marginBottom: '25px' }}>
                 <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#212121', marginBottom: '10px' }}>Available offers</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
@@ -503,7 +481,6 @@ function App() {
                 </div>
               </div>
 
-              {/* Delivery, Highlights & Seller Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '20px', fontSize: '14px', borderTop: '1px solid #f0f0f0', paddingTop: '20px' }}>
                 <div style={{ color: '#878787', fontWeight: '500' }}>Delivery</div>
                 <div>
@@ -602,7 +579,6 @@ function App() {
         </div>
       )}
 
-      {/* FLYOUT MODALS */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
@@ -649,29 +625,60 @@ function App() {
 
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
-          <div style={{ width: '650px', height: '528px', backgroundColor: '#ffffff', borderRadius: '2px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
-            <button onClick={() => { setShowAuthModal(false); setLegalView('none'); }} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '18px', color: '#878787', cursor: 'pointer', zIndex: 10 }}>✕</button>
+          <div style={{ width: '700px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
+            <button onClick={() => { setShowAuthModal(false); setLegalView('none'); }} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '24px', color: '#878787', cursor: 'pointer', zIndex: 10, lineHeight: 1 }}>✕</button>
+            
             <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', color: '#ffffff' }}>
               <div>
-                <h2 style={{ fontSize: '24px', fontWeight: '500', margin: '0 0 16px 0' }}>{legalView === 'terms' ? "Terms of Use" : legalView === 'privacy' ? "Privacy Policy" : isSignUp ? "Sign Up" : "Login"}</h2>
-                <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#dbdbdb', margin: 0 }}>Access your configuration environment seamlessly.</p>
+                <h2 style={{ fontSize: '28px', fontWeight: '500', margin: '0 0 16px 0' }}>{isSignUp ? "Looks like you're new here!" : "Login"}</h2>
+                <p style={{ fontSize: '15px', lineHeight: '1.5', color: '#dbdbdb', margin: 0 }}>
+                  {isSignUp ? "Sign up with your details to get started" : "Get access to your Orders, Wishlist and Recommendations"}
+                </p>
               </div>
-              <div style={{ fontSize: '24px', fontWeight: '700', letterSpacing: '1px', opacity: 0.3, textAlign: 'center' }}>BazaarInd</div>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                 <img src="https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-cp-zion/img/login_img_c4a81e.png" alt="Login Graphic" style={{ width: '100%', objectFit: 'contain' }} />
+              </div>
             </div>
+
             {legalView === 'none' ? (
-              <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '56px 35px 16px 35px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxSizing: 'border-box' }}>
+              <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '50px 35px 16px 35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                 {authError && <div style={{ backgroundColor: '#ffeae9', color: '#d32f2f', padding: '10px', borderRadius: '4px', fontSize: '13px', marginBottom: '15px', border: '1px solid #f4c7c3' }}>{authError}</div>}
-                {isSignUp && <div style={{ marginBottom: '30px' }}><input type="text" placeholder="Enter Full Name" required value={authForm.name} onChange={(e) => setAuthForm({...authForm, name: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} /></div>}
-                <div style={{ marginBottom: '30px' }}><input type="email" placeholder="Enter Email Address" required value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} /></div>
-                <div style={{ marginBottom: '30px' }}><input type="password" placeholder="Enter Password" required value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '16px', padding: '8px 0', color: '#000000' }} /></div>
-                <button type="submit" style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', height: '#48px', borderRadius: '2px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.2)', textTransform: 'uppercase' }}>{isSignUp ? "Continue to Signup" : "Log In"}</button>
-                <p onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ color: '#2874F0', fontSize: '14px', textAlign: 'center', cursor: 'pointer', marginTop: '35px', fontWeight: '500' }}>{isSignUp ? "Existing User? Log in to your channel" : "New to BazaarInd? Create an account"}</p>
+                
+                {isSignUp && (
+                  <div style={{ marginBottom: '25px', position: 'relative' }}>
+                    <input type="text" placeholder="Enter Full Name" required value={authForm.name} onChange={(e) => setAuthForm({...authForm, name: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} />
+                  </div>
+                )}
+                
+                <div style={{ marginBottom: '25px', position: 'relative' }}>
+                  <input type="email" placeholder="Enter Email Address" required value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} />
+                </div>
+                
+                <div style={{ marginBottom: '35px', position: 'relative' }}>
+                  <input type="password" placeholder="Enter Password" required value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} />
+                </div>
+
+                <div style={{ fontSize: '12px', color: '#878787', marginBottom: '20px', lineHeight: '1.5' }}>
+                  By continuing, you agree to BazaarInd's <span style={{ color: '#2874F0', cursor: 'pointer' }} onClick={() => setLegalView('terms')}>Terms of Use</span> and <span style={{ color: '#2874F0', cursor: 'pointer' }} onClick={() => setLegalView('privacy')}>Privacy Policy</span>.
+                </div>
+
+                <button type="submit" style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', padding: '14px 0', borderRadius: '2px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.2)' }}>{isSignUp ? "Continue" : "Login"}</button>
+                
+                <div style={{ marginTop: 'auto', textAlign: 'center' }}>
+                  <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ background: 'none', border: 'none', color: '#2874F0', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
+                    {isSignUp ? "Existing User? Log in" : "New to BazaarInd? Create an account"}
+                  </button>
+                </div>
               </form>
             ) : (
-              <div style={{ width: '60%', padding: '35px 35px 20px 35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-                <div onClick={() => setLegalView('none')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '15px' }}>← Back to Account Interface</div>
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#333333', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #e0e0e0', paddingTop: '12px' }}>
-                    <p>Legal documentation stub</p>
+              <div style={{ width: '60%', padding: '35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                <div onClick={() => setLegalView('none')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                  Back to {isSignUp ? "Sign Up" : "Login"}
+                </div>
+                <h3 style={{ margin: '0 0 15px 0', color: '#212121' }}>{legalView === 'terms' ? "Terms of Use" : "Privacy Policy"}</h3>
+                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#555', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #f0f0f0', paddingTop: '15px' }}>
+                    <p>This is a demonstration environment. No real data is processed or stored securely for production use. By using this platform, you acknowledge it is an engineering prototype.</p>
                 </div>
               </div>
             )}
