@@ -52,33 +52,71 @@ function App() {
     { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
   ]
 
-  // EXPANDED IMAGE RESOLUTION ENGINE
+  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && customUrl.trim() !== '') return customUrl;
     const lower = name.toLowerCase();
-    
-    // 1. Keyword Specific Matching (Highest Priority)
-    if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('smartphone') || lower.includes('5g')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('smartwatch') || lower.includes('watch')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('earbuds') || lower.includes('tws')) return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('keyboard')) return "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('shoe') || lower.includes('sneaker')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('dumbbell') || lower.includes('gym') || lower.includes('weight')) return "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('football') || lower.includes('ball')) return "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('mat') || lower.includes('yoga')) return "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('kettle') || lower.includes('cooker') || lower.includes('grinder')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80";
 
-    // 2. Category Level Fallbacks
+    // 1. ELECTRONICS
+    if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('smartphone') || lower.includes('5g') || lower.includes('mobile')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('watch') || lower.includes('band')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('earbuds') || lower.includes('tws') || lower.includes('airpods')) return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('keyboard') || lower.includes('mouse') || lower.includes('pc')) return "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('laptop') || lower.includes('macbook') || lower.includes('notebook computer')) return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('tv') || lower.includes('television') || lower.includes('monitor')) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=600&q=80";
+
+    // 2. FOOTWEAR
+    if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('running')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('formal') || lower.includes('leather')) return "https://images.unsplash.com/photo-1614252339474-1249bdf5499d?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('sandal') || lower.includes('slipper') || lower.includes('flip') || lower.includes('crocs')) return "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('boot') || lower.includes('trekking')) return "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=600&q=80";
+
+    // 3. FITNESS & LIFESTYLE
+    if (lower.includes('dumbbell') || lower.includes('gym') || lower.includes('weight')) return "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('football') || lower.includes('ball') || lower.includes('soccer')) return "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('mat') || lower.includes('yoga')) return "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('protein') || lower.includes('whey') || lower.includes('shaker')) return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cycle') || lower.includes('bicycle') || lower.includes('bike')) return "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80";
+
+    // 4. HOME & KITCHEN
+    if (lower.includes('kettle') || lower.includes('boiler')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cooker') || lower.includes('pan') || lower.includes('kadai') || lower.includes('tawa')) return "https://images.unsplash.com/photo-1584990347449-a1b7e07eb5c8?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('mixer') || lower.includes('grinder') || lower.includes('blender')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80"; 
+    if (lower.includes('bedsheet') || lower.includes('blanket') || lower.includes('pillow') || lower.includes('cover')) return "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('towel') || lower.includes('bath')) return "https://images.unsplash.com/photo-1616627561839-074385245dd6?auto=format&fit=crop&w=600&q=80";
+
+    // 5. GROCERIES
+    if (lower.includes('salt') || lower.includes('sugar') || lower.includes('powder') || lower.includes('masala')) return "https://images.unsplash.com/photo-1626015496465-94dc47833a6b?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('oil') || lower.includes('ghee')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('atta') || lower.includes('flour') || lower.includes('rice') || lower.includes('dal') || lower.includes('pulse')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('tea') || lower.includes('coffee')) return "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('biscuit') || lower.includes('snack') || lower.includes('chips') || lower.includes('maggi') || lower.includes('noodle')) return "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('soap') || lower.includes('wash') || lower.includes('shampoo')) return "https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&w=600&q=80";
+
+    // 6. APPAREL
+    if (lower.includes('shirt') || lower.includes('t-shirt') || lower.includes('polo')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('jeans') || lower.includes('trouser') || lower.includes('pant')) return "https://images.unsplash.com/photo-1542272604-780c96850d76?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('saree') || lower.includes('kurta') || lower.includes('ethnic')) return "https://images.unsplash.com/photo-1610030469983-98e550d615ef?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('jacket') || lower.includes('sweater') || lower.includes('hoodie')) return "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('dress') || lower.includes('top') || lower.includes('skirt')) return "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80";
+
+    // 7. BOOKS & STATIONERY
+    if (lower.includes('book') || lower.includes('novel') || lower.includes('story')) return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('pen ') || lower.includes('pencil') || lower.includes('marker')) return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('notebook') || lower.includes('diary') || lower.includes('paper')) return "https://images.unsplash.com/photo-1531346878377-a541e4ab0d4c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('color') || lower.includes('paint') || lower.includes('crayons')) return "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80";
+
+    // --- BROAD CATEGORY LEVEL FALLBACKS (If no keyword hits) ---
     if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
     if (category === "Footwear") return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
     if (category === "Fitness & Lifestyle") return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80";
     if (category === "Home & Kitchen") return "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80";
     if (category === "Groceries") return "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80";
     if (category === "Apparel") return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80";
-    if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
+    if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80";
     
-    // 3. Absolute Default (Generic Shopping Cart/Boxes)
+    // ABSOLUTE SYSTEM DEFAULT
     return "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80";
   };
 
