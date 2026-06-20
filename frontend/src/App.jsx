@@ -1,5 +1,20 @@
 import { useState, useEffect } from 'react'
 
+// --- STATIC DATA & HELPERS MOVED OUTSIDE COMPONENT FOR PERFORMANCE ---
+const createSlug = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+const categoryIcons = [
+  { name: 'All', icon: '✨' }, { name: 'Electronics', icon: '📱' }, { name: 'Home & Kitchen', icon: '🍳' },
+  { name: 'Groceries', icon: '🍏' }, { name: 'Apparel', icon: '👔' }, { name: 'Fitness & Lifestyle', icon: '🏋️‍♂️' },
+  { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
+];
+
+const promoBanners = [
+  { title: "EXCLUSIVE DEALS FOR YOU", sub: "Flat 10% Off Up to ₹100 Coupon Applied Automatically", img: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(40,116,240,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
+  { title: "JUNE EPIC HIGH-HARDWARE SALE", sub: "Flat 60% Off Premium Audio Kits & Smart Wearable Components", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(251,100,27,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
+  { title: "SMARTEST SUMMER ECO DEALS", sub: "Power every step with upgraded processing and storage cells", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(16,185,129,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
+];
+
 function App() {
   // Navigation & Core System State Vectors
   const [currentView, setCurrentView] = useState('home')
@@ -39,26 +54,77 @@ function App() {
   const [isEditing, setIsEditing] = useState(false)
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
-  // Rotating Billboard Dashboard Cover Arrays
-  const [activeBanner, setActiveBanner] = useState(0)
-  const promoBanners = [
-    { title: "EXCLUSIVE DEALS FOR YOU", sub: "Flat 10% Off Up to ₹100 Coupon Applied Automatically", img: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(40,116,240,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
-    { title: "JUNE EPIC HIGH-HARDWARE SALE", sub: "Flat 60% Off Premium Audio Kits & Smart Wearable Components", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(251,100,27,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
-    { title: "SMARTEST SUMMER ECO DEALS", sub: "Power every step with upgraded processing and storage cells", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(16,185,129,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
-  ]
+  // --- HTML5 HISTORY API INTEGRATION (URL SYNC) ---
 
-  const categoryIcons = [
-    { name: 'All', icon: '✨' }, { name: 'Electronics', icon: '📱' }, { name: 'Home & Kitchen', icon: '🍳' },
-    { name: 'Groceries', icon: '🍏' }, { name: 'Apparel', icon: '👔' }, { name: 'Fitness & Lifestyle', icon: '🏋️‍♂️' },
-    { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
-  ]
+  // 1. Sync State -> URL Address Bar
+  useEffect(() => {
+    let path = '/';
+    if (currentView === 'catalog') {
+      if (selectedCategory === 'All') path = '/catalog';
+      else path = `/category/${createSlug(selectedCategory)}`;
+    } else if (currentView === 'product-detail' && selectedProduct) {
+      path = `/product/${createSlug(selectedProduct.name)}`;
+    } else if (currentView !== 'home') {
+      path = `/${currentView}`;
+    }
+
+    if (window.location.pathname !== path) {
+      window.history.pushState({ view: currentView, category: selectedCategory, product: selectedProduct }, '', path);
+    }
+  }, [currentView, selectedCategory, selectedProduct]);
+
+  // 2. Sync URL Address Bar -> State (Browser Back/Forward & Direct Links)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const path = window.location.pathname;
+      if (path === '/' || path === '') {
+        setCurrentView('home');
+        setSelectedCategory('All');
+      } else if (path.startsWith('/category/')) {
+        const slug = path.split('/category/')[1];
+        const matchedCategory = categoryIcons.find(c => createSlug(c.name) === slug);
+        if (matchedCategory) {
+          setSelectedCategory(matchedCategory.name);
+          setCurrentView('catalog');
+        } else {
+          setCurrentView('home');
+        }
+      } else if (path === '/catalog') {
+        setCurrentView('catalog');
+        setSelectedCategory('All');
+      } else {
+        const view = path.split('/')[1]; 
+        if (['checkout', 'admin', 'order-success'].includes(view)) {
+           setCurrentView(view);
+        } else {
+           setCurrentView('home');
+        }
+      }
+    };
+
+    const handlePopState = (e) => {
+      if (e.state) {
+        setCurrentView(e.state.view || 'home');
+        setSelectedCategory(e.state.category || 'All');
+        if (e.state.product) setSelectedProduct(e.state.product);
+      } else {
+        handleLocationChange();
+      }
+    };
+
+    // Run once on cold boot to read initial URL
+    handleLocationChange();
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
 
   // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && customUrl.trim() !== '') return customUrl;
     const lower = name.toLowerCase();
 
-    // 1. ELECTRONICS
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('smartphone') || lower.includes('5g') || lower.includes('mobile')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('watch') || lower.includes('band')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
@@ -67,27 +133,23 @@ function App() {
     if (lower.includes('laptop') || lower.includes('macbook') || lower.includes('notebook computer')) return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('tv') || lower.includes('television') || lower.includes('monitor')) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=600&q=80";
 
-    // 2. FOOTWEAR
     if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('running')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('formal') || lower.includes('leather')) return "https://images.unsplash.com/photo-1614252339474-1249bdf5499d?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('sandal') || lower.includes('slipper') || lower.includes('flip') || lower.includes('crocs')) return "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('boot') || lower.includes('trekking')) return "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=600&q=80";
 
-    // 3. FITNESS & LIFESTYLE
     if (lower.includes('dumbbell') || lower.includes('gym') || lower.includes('weight')) return "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('football') || lower.includes('ball') || lower.includes('soccer')) return "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('mat') || lower.includes('yoga')) return "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('protein') || lower.includes('whey') || lower.includes('shaker')) return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('cycle') || lower.includes('bicycle') || lower.includes('bike')) return "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80";
 
-    // 4. HOME & KITCHEN
     if (lower.includes('kettle') || lower.includes('boiler')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('cooker') || lower.includes('pan') || lower.includes('kadai') || lower.includes('tawa')) return "https://images.unsplash.com/photo-1584990347449-a1b7e07eb5c8?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('mixer') || lower.includes('grinder') || lower.includes('blender')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80"; 
     if (lower.includes('bedsheet') || lower.includes('blanket') || lower.includes('pillow') || lower.includes('cover')) return "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('towel') || lower.includes('bath')) return "https://images.unsplash.com/photo-1616627561839-074385245dd6?auto=format&fit=crop&w=600&q=80";
 
-    // 5. GROCERIES
     if (lower.includes('salt') || lower.includes('sugar') || lower.includes('powder') || lower.includes('masala')) return "https://images.unsplash.com/photo-1626015496465-94dc47833a6b?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('oil') || lower.includes('ghee')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('atta') || lower.includes('flour') || lower.includes('rice') || lower.includes('dal') || lower.includes('pulse')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
@@ -95,20 +157,17 @@ function App() {
     if (lower.includes('biscuit') || lower.includes('snack') || lower.includes('chips') || lower.includes('maggi') || lower.includes('noodle')) return "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('soap') || lower.includes('wash') || lower.includes('shampoo')) return "https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&w=600&q=80";
 
-    // 6. APPAREL
     if (lower.includes('shirt') || lower.includes('t-shirt') || lower.includes('polo')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('jeans') || lower.includes('trouser') || lower.includes('pant')) return "https://images.unsplash.com/photo-1542272604-780c96850d76?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('saree') || lower.includes('kurta') || lower.includes('ethnic')) return "https://images.unsplash.com/photo-1610030469983-98e550d615ef?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('jacket') || lower.includes('sweater') || lower.includes('hoodie')) return "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('dress') || lower.includes('top') || lower.includes('skirt')) return "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80";
 
-    // 7. BOOKS & STATIONERY
     if (lower.includes('book') || lower.includes('novel') || lower.includes('story')) return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('pen ') || lower.includes('pencil') || lower.includes('marker')) return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('notebook') || lower.includes('diary') || lower.includes('paper')) return "https://images.unsplash.com/photo-1531346878377-a541e4ab0d4c?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('color') || lower.includes('paint') || lower.includes('crayons')) return "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80";
 
-    // --- BROAD CATEGORY LEVEL FALLBACKS ---
     if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
     if (category === "Footwear") return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
     if (category === "Fitness & Lifestyle") return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80";
@@ -117,7 +176,6 @@ function App() {
     if (category === "Apparel") return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80";
     if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80";
     
-    // ABSOLUTE SYSTEM DEFAULT
     return "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80";
   };
 
@@ -334,7 +392,6 @@ function App() {
         </div>
       </nav>
 
-      {/* Category Icons Bar - Now exclusively shown on HOME */}
       {currentView === 'home' && (
         <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto' }}>
           {categoryIcons.map(cat => {
@@ -349,10 +406,8 @@ function App() {
         </div>
       )}
 
-      {/* --- INTEGRATED ADMIN TAB VIEW --- */}
       {currentView === 'admin' && isAdmin && (
         <main style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
-          {/* Admin Form Column */}
           <div style={{ width: '40%', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, position: 'sticky', top: '100px' }}>
             <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
               {isEditing ? `Editing Product: ${adminForm.id}` : 'Create New Product Record'}
@@ -380,7 +435,6 @@ function App() {
             </form>
           </div>
           
-          {/* Admin Product List Column */}
           <div style={{ width: '60%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h3 style={{ margin: 0 }}>Active Registry Nodes ({products.length})</h3>
@@ -452,7 +506,6 @@ function App() {
 
       {currentView === 'catalog' && (
         <main style={{ padding: '30px 10%' }}>
-          {/* Explicit Back Button for Catalog - Bringing category bar back */}
           <button onClick={() => { setCurrentView('home'); setSelectedCategory('All'); }} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '20px' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back to Home
@@ -588,7 +641,6 @@ function App() {
       {currentView === 'checkout' && (
         <div style={{ padding: '20px 10%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
-          {/* Top Level Back Button added for Checkout screen */}
           <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back to Catalog
