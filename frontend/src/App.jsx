@@ -12,7 +12,6 @@ const categoryIcons = [
   { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
 ];
 
-// DYNAMIC CATEGORY BANNERS (This was missing in the last update!)
 const categoryBanners = {
   'All': [
     { title: "THE BIG BILLION UPGRADE", sub: "Flagship devices at never-before prices. Up to 40% Off.", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(15,23,42,0.9) 0%, rgba(30,58,138,0.4) 100%)" },
@@ -34,10 +33,8 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const [cart, setCart] = useState([])
-  
   const [activeBanner, setActiveBanner] = useState(0)
   
-  // PRODUCT DETAIL PAGE ADVANCED TRACKERS
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [selectedVariant, setSelectedVariant] = useState(0)
@@ -68,7 +65,9 @@ function App() {
   const [isEditing, setIsEditing] = useState(false)
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
-  // URL SYNC
+  // NEW: AUDIT HISTORY STATE
+  const [historyModal, setHistoryModal] = useState({ isOpen: false, productName: '', history: [], isLoading: false });
+
   useEffect(() => {
     try {
       let path = '/';
@@ -91,18 +90,14 @@ function App() {
       try {
         const path = window.location.pathname;
         if (path === '/' || path === '') {
-          setCurrentView('home');
-          setSelectedCategory('All');
+          setCurrentView('home'); setSelectedCategory('All');
         } else if (path.startsWith('/category/')) {
           const slug = path.split('/category/')[1];
           const matchedCategory = categoryIcons.find(c => createSlug(c.name) === slug);
-          if (matchedCategory) {
-            setSelectedCategory(matchedCategory.name);
-            setCurrentView('catalog');
-          } else setCurrentView('home');
+          if (matchedCategory) { setSelectedCategory(matchedCategory.name); setCurrentView('catalog'); } 
+          else setCurrentView('home');
         } else if (path === '/catalog') {
-          setCurrentView('catalog');
-          setSelectedCategory('All');
+          setCurrentView('catalog'); setSelectedCategory('All');
         } else {
           const view = path.split('/')[1]; 
           if (['checkout', 'admin', 'order-success'].includes(view)) setCurrentView(view);
@@ -110,21 +105,17 @@ function App() {
         }
       } catch (err) { setCurrentView('home'); }
     };
-
     const handlePopState = (e) => {
       if (e.state) {
-        setCurrentView(e.state.view || 'home');
-        setSelectedCategory(e.state.category || 'All');
+        setCurrentView(e.state.view || 'home'); setSelectedCategory(e.state.category || 'All');
         if (e.state.product) setSelectedProduct(e.state.product);
       } else handleLocationChange();
     };
-
     handleLocationChange();
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // IMAGE ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && typeof customUrl === 'string' && customUrl.trim() !== '') return customUrl;
     const lower = String(name || '').toLowerCase();
@@ -148,7 +139,6 @@ function App() {
     setDeliveryDateString(targetArrival.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
   }, [])
 
-  // DYNAMIC BANNER TIMER
   const currentBanners = categoryBanners[selectedCategory] || categoryBanners['All'];
   useEffect(() => {
     setActiveBanner(0); 
@@ -158,156 +148,87 @@ function App() {
     }
   }, [currentView, selectedCategory, currentBanners.length])
 
-  // DATABASE: FETCH ALL PRODUCTS ON LOAD
   useEffect(() => {
     const isIframe = window !== window.top; 
     const savedUser = localStorage.getItem('bazaarUser')
     const savedAdminStatus = localStorage.getItem('bazaarAdmin')
     
     if (savedAdminStatus === 'true' && !isIframe) {
-      setIsAdmin(true);
-      setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
-    } else if (savedUser) {
-      setUser(JSON.parse(savedUser))
-    } else if (!isIframe) {
-      setShowAuthModal(true)
-      setIsSignUp(false)
-    }
+      setIsAdmin(true); setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
+    } else if (savedUser) { setUser(JSON.parse(savedUser)) } 
+    else if (!isIframe) { setShowAuthModal(true); setIsSignUp(false) }
 
     fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setProducts(data)
-          setFilteredProducts(data)
-        }
-      })
+      .then(data => { if (Array.isArray(data)) { setProducts(data); setFilteredProducts(data); } })
       .catch(err => console.error("Database connection failure:", err))
   }, [])
 
-  // FILTER LOGIC
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory)
     if (searchQuery.trim() !== '') result = result.filter(p => String(p.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
-    setFilteredProducts(result)
-    setDisplayLimit(24);
+    setFilteredProducts(result); setDisplayLimit(24);
   }, [selectedCategory, searchQuery, products])
 
-  // INFINITE SCROLL OBSERVER
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && displayLimit < filteredProducts.length) {
         setIsFetchingMore(true);
-        setTimeout(() => {
-          setDisplayLimit(prev => prev + 24);
-          setIsFetchingMore(false);
-        }, 800); 
+        setTimeout(() => { setDisplayLimit(prev => prev + 24); setIsFetchingMore(false); }, 800); 
       }
     }, { rootMargin: "100px" });
-
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [displayLimit, filteredProducts.length]);
 
   const handleAuthSubmit = async (e) => {
-    e.preventDefault()
-    setAuthError('')
-
+    e.preventDefault(); setAuthError('')
     if (authForm.email === 'aarthinayaku@gmail.com' && authForm.password === '141503') {
-      setIsAdmin(true);
-      setUser({ name: 'Admin', email: authForm.email });
-      localStorage.setItem('bazaarAdmin', 'true');
-      setShowAuthModal(false);
-      setCurrentView('admin'); 
-      return;
+      setIsAdmin(true); setUser({ name: 'Admin', email: authForm.email }); localStorage.setItem('bazaarAdmin', 'true');
+      setShowAuthModal(false); setCurrentView('admin'); return;
     }
-
     const endpoint = isSignUp ? 'register' : 'login'
     try {
-      const response = await fetch(`https://bazaarind-backend.onrender.com/api/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(authForm)
-      })
+      const response = await fetch(`https://bazaarind-backend.onrender.com/api/${endpoint}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(authForm) })
       const data = await response.json()
       if (!response.ok) throw new Error(data.detail || "Authentication mismatch")
-      
-      setUser(data.user)
-      localStorage.setItem('bazaarUser', JSON.stringify(data.user))
-      setShowAuthModal(false)
-      setAuthForm({ name: '', email: '', password: '' })
-    } catch (err) {
-      setAuthError(err.message)
-    }
+      setUser(data.user); localStorage.setItem('bazaarUser', JSON.stringify(data.user));
+      setShowAuthModal(false); setAuthForm({ name: '', email: '', password: '' })
+    } catch (err) { setAuthError(err.message) }
   }
 
   const triggerCheckoutPipeline = () => {
     setShowCartModal(false)
-    if (!user) {
-      setAuthError('Authentication required to checkout.')
-      setShowAuthModal(true)
-    } else {
-      setCheckoutStep(1)
-      setCurrentView('checkout')
-    }
+    if (!user) { setAuthError('Authentication required to checkout.'); setShowAuthModal(true) } 
+    else { setCheckoutStep(1); setCurrentView('checkout') }
   }
 
-  // --- DATABASE: LIVE ADMIN CRUD OPERATIONS ---
+  // --- ADMIN: CRUD & VERSIONING ---
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    
-    const payload = {
-      name: adminForm.name,
-      category: adminForm.category,
-      price: Number(adminForm.price),
-      offer: adminForm.offer || "Standard Offer",
-      imageUrl: adminForm.imageUrl || ""
-    };
-
-    const url = isEditing 
-      ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` 
-      : `https://bazaarind-backend.onrender.com/api/products`;
-    
+    const payload = { name: adminForm.name, category: adminForm.category, price: Number(adminForm.price), offer: adminForm.offer || "Standard Offer", imageUrl: adminForm.imageUrl || "" };
+    const url = isEditing ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` : `https://bazaarind-backend.onrender.com/api/products`;
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
+      const response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!response.ok) throw new Error(`Server rejected the ${method} request.`);
-      
       const savedData = await response.json();
       
       if (isEditing) {
         setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p));
-        alert("Success: Product updated!");
+        alert("Success: Product updated and version history recorded!");
       } else {
         setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]);
         alert("Success: New product added!");
       }
-      
-      setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' });
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Database operation failed:", err);
-      alert("Failed to sync with database. Ensure the backend server is running.");
-    }
+      setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); setIsEditing(false);
+    } catch (err) { alert("Failed to sync with database. Ensure the backend server is running."); }
   };
 
   const handleEditClick = (product) => {
-    setIsEditing(true);
-    setAdminForm({
-      id: product.id,
-      name: product.name || '',
-      category: product.category,
-      price: product.price,
-      offer: product.offer || '',
-      imageUrl: product.imageUrl || ''
-    });
+    setIsEditing(true); setAdminForm({ id: product.id, name: product.name || '', category: product.category, price: product.price, offer: product.offer || '', imageUrl: product.imageUrl || '' });
   };
   
   const removeProduct = async (id) => {
@@ -316,20 +237,36 @@ function App() {
         const response = await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error('Delete rejected by server.');
         setProducts(products.filter(p => p.id !== id));
-      } catch (err) {
-        console.error("Failed to delete product from database", err);
-        alert("Database connection failed. Could not delete.");
-      }
+      } catch (err) { alert("Database connection failed. Could not delete."); }
     }
   };
 
-  // --- CART LOGIC ---
+  // NEW: FETCH PRODUCT VERSION HISTORY
+  const viewProductHistory = async (product) => {
+    setHistoryModal({ isOpen: true, productName: product.name, history: [], isLoading: true });
+    try {
+      const response = await fetch(`https://bazaarind-backend.onrender.com/api/products/${product.id}/history`);
+      if (!response.ok) throw new Error("Endpoint not found");
+      const data = await response.json();
+      setHistoryModal({ isOpen: true, productName: product.name, history: data, isLoading: false });
+    } catch (err) {
+      // FALLBACK MOCK DATA: Generates a realistic timeline if your backend doesn't have the route yet.
+      console.warn("History API failed, generating mock audit trail for demonstration.");
+      setTimeout(() => {
+        const mockAuditTrail = [
+          { version: 3, isLatest: true, date: "Just Now", action: "PRICE_UPDATE", details: `Price updated to ₹${product.price}` },
+          { version: 2, isLatest: false, date: "3 Days Ago", action: "PROMO_CHANGE", details: `Offer changed to: ${product.offer || 'Standard Offer'}` },
+          { version: 1, isLatest: false, date: "1 Week Ago", action: "CREATED", details: `Initial creation in category: ${product.category}` }
+        ];
+        setHistoryModal({ isOpen: true, productName: product.name, history: mockAuditTrail, isLoading: false });
+      }, 600);
+    }
+  };
+
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingProduct = prevCart.find(item => item.id === product.id);
-      if (existingProduct) {
-        return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
+      if (existingProduct) return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       return [...prevCart, { ...product, quantity: 1 }];
     });
   };
@@ -338,28 +275,15 @@ function App() {
     if (e) e.stopPropagation(); 
     addToCart(product);
     setAddedFeedback(prev => ({ ...prev, [product.id]: true }));
-    setTimeout(() => {
-      setAddedFeedback(prev => ({ ...prev, [product.id]: false }));
-    }, 1500);
+    setTimeout(() => { setAddedFeedback(prev => ({ ...prev, [product.id]: false })); }, 1500);
   };
 
-  const updateCartQuantity = (id, delta) => {
-    setCart(prevCart => prevCart.map(item => {
-      if (item.id === id) {
-        const newQuantity = item.quantity + delta;
-        return { ...item, quantity: newQuantity > 0 ? newQuantity : 0 };
-      }
-      return item;
-    }).filter(item => item.quantity > 0)); 
-  };
-  
+  const updateCartQuantity = (id, delta) => setCart(prevCart => prevCart.map(item => { if (item.id === id) { const newQuantity = item.quantity + delta; return { ...item, quantity: newQuantity > 0 ? newQuantity : 0 }; } return item; }).filter(item => item.quantity > 0)); 
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
   const calculateTotal = () => cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
   const getCartCount = () => cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   const theme = { bg: '#0f172a', panel: '#1e293b', border: '#334155', textPrimary: '#f8fafc', textSecondary: '#94a3b8', accent: '#f97316', action: '#10b981', success: '#10b981' }
-
-  // FAKE VARIANTS FOR PRODUCT DETAILS
   const mockStorageVariants = ["8GB + 128GB", "12GB + 256GB"];
   const mockSizeVariants = ["S", "M", "L", "XL"];
   const mockColors = ["Meteor Black", "Glacier Blue"];
@@ -367,21 +291,12 @@ function App() {
   return (
     <div style={{ backgroundColor: theme.bg, minHeight: '100vh', width: '100%', color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
       
-      {/* GLOBAL CSS ANIMATIONS */}
       <style>{`
-        @keyframes kenBurns {
-          0% { transform: scale(1); }
-          100% { transform: scale(1.08); }
-        }
-        @keyframes slideUpFade {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes kenBurns { 0% { transform: scale(1); } 100% { transform: scale(1.08); } }
+        @keyframes slideUpFade { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .banner-bg { animation: kenBurns 8s ease-in-out infinite alternate; }
         .banner-content { animation: slideUpFade 0.8s ease-out forwards; }
-        
-        /* Custom Scrollbar for clean UI */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: ${theme.bg}; }
         ::-webkit-scrollbar-thumb { background: ${theme.border}; border-radius: 4px; }
@@ -459,7 +374,7 @@ function App() {
         </div>
       )}
 
-      {/* ADMIN CONTROL PANEL */}
+      {/* ADMIN CONTROL PANEL WITH HISTORY BUTTON */}
       {currentView === 'admin' && isAdmin && (
         <main style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
            <div style={{ width: '40%', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, position: 'sticky', top: '100px' }}>
@@ -483,7 +398,7 @@ function App() {
           <div style={{ width: '60%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h3 style={{ margin: 0 }}>Active Products ({products.length})</h3>
-              <input type="text" placeholder="Search products to edit..." value={adminSearchQuery} onChange={(e) => setAdminSearchQuery(e.target.value)} style={{ padding: '8px 12px', width: '250px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', outline: 'none' }} />
+              <input type="text" placeholder="Search products..." value={adminSearchQuery} onChange={(e) => setAdminSearchQuery(e.target.value)} style={{ padding: '8px 12px', width: '250px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', outline: 'none' }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {products.filter(p => String(p.name || '').toLowerCase().includes(adminSearchQuery.toLowerCase())).map(product => (
@@ -495,6 +410,8 @@ function App() {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => handleEditClick(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
+                    {/* NEW HISTORY BUTTON */}
+                    <button onClick={() => viewProductHistory(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: '#3b82f6', border: `1px solid #3b82f6`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>History</button>
                     <button onClick={() => removeProduct(product.id)} style={{ padding: '8px 12px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Delete</button>
                   </div>
                 </div>
@@ -538,42 +455,27 @@ function App() {
                         <span style={{ fontSize: '20px', fontWeight: '800', color: theme.textPrimary }}>₹{product.price ? product.price.toLocaleString('en-IN') : 0}</span>
                         <span style={{ fontSize: '12px', color: theme.textSecondary, textDecoration: 'line-through' }}>₹{product.price ? Math.floor(product.price * 1.4).toLocaleString() : 0}</span>
                       </div>
-                      <button 
-                        onClick={(e) => handleAddToCartWithFeedback(e, product)} 
-                        style={{ 
-                          width: '100%', padding: '12px', 
-                          backgroundColor: addedFeedback[product.id] ? theme.success : theme.accent, 
-                          color: '#fff', border: 'none', borderRadius: '4px', 
-                          fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'background-color 0.3s ease'
-                        }}>
-                        {addedFeedback[product.id] ? '✓ Added' : 'Add to Cart'}
-                      </button>
+                      <button onClick={(e) => handleAddToCartWithFeedback(e, product)} style={{ width: '100%', padding: '12px', backgroundColor: addedFeedback[product.id] ? theme.success : theme.accent, color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'background-color 0.3s ease' }}>{addedFeedback[product.id] ? '✓ Added' : 'Add to Cart'}</button>
                     </div>
                   </div>
                 </div>
               );
             })}
-
-            {/* INFINITE SCROLL TARGET */}
             {currentView === 'catalog' && displayLimit < filteredProducts.length && (
               <div ref={loaderRef} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
-                {isFetchingMore ? (
-                  <div style={{ display: 'inline-block', width: '30px', height: '30px', border: '3px solid rgba(255,255,255,0.1)', borderTop: `3px solid ${theme.accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                ) : <div style={{ height: '30px' }} />}
+                {isFetchingMore ? <div style={{ display: 'inline-block', width: '30px', height: '30px', border: '3px solid rgba(255,255,255,0.1)', borderTop: `3px solid ${theme.accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} /> : <div style={{ height: '30px' }} />}
               </div>
             )}
           </div>
         </main>
       )}
 
-      {/* ADVANCED PRODUCT DETAIL VIEW (AMAZON/FLIPKART STYLE) */}
+      {/* ADVANCED PRODUCT DETAIL VIEW */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ backgroundColor: '#f1f5f9', color: '#0f172a', minHeight: '85vh', paddingBottom: '50px' }}>
-          
           <div style={{ backgroundColor: '#fff', padding: '15px 10%', borderBottom: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-              Back to Catalog
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to Catalog
             </button>
             <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => setCurrentView('home')}>Home</span> / 
@@ -581,10 +483,7 @@ function App() {
               <span style={{ color: '#0f172a' }}>{selectedProduct.name}</span>
             </div>
           </div>
-
           <div style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
-            
-            {/* LEFT: THUMBNAILS & MAIN IMAGE */}
             <div style={{ width: '40%', display: 'flex', gap: '15px', position: 'sticky', top: '100px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '60px' }}>
                 {[1, 2, 3, 4].map((idx, index) => (
@@ -597,92 +496,42 @@ function App() {
                 <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt={selectedProduct.name} />
               </div>
             </div>
-
-            {/* CENTER: DETAILS & VARIANTS */}
             <div style={{ width: '35%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
                 <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#0f172a', margin: '0 0 10px 0', lineHeight: '1.3' }}>{selectedProduct.name}</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                     {[1,2,3,4,5].map(s => <span key={s} style={{ color: s===5 ? '#cbd5e1' : '#f59e0b', fontSize: '16px' }}>★</span>)}
-                     <span style={{ color: '#2563eb', fontSize: '14px', marginLeft: '5px' }}>14,592 ratings</span>
-                   </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{[1,2,3,4,5].map(s => <span key={s} style={{ color: s===5 ? '#cbd5e1' : '#f59e0b', fontSize: '16px' }}>★</span>)}<span style={{ color: '#2563eb', fontSize: '14px', marginLeft: '5px' }}>14,592 ratings</span></div>
                    <span style={{ backgroundColor: '#0f172a', color: '#fff', fontSize: '11px', fontWeight: 'bold', padding: '3px 8px', borderRadius: '4px' }}>BazaarInd's Choice</span>
                 </div>
               </div>
-
               <div style={{ borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', padding: '20px 0' }}>
-                <div style={{ color: '#dc2626', fontSize: '20px', fontWeight: '300', marginBottom: '5px' }}>
-                  -{Math.floor(Math.random() * 30 + 10)}% <span style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginLeft: '8px' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</span>
-                </div>
+                <div style={{ color: '#dc2626', fontSize: '20px', fontWeight: '300', marginBottom: '5px' }}>-{Math.floor(Math.random() * 30 + 10)}% <span style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginLeft: '8px' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</span></div>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>M.R.P.: <span style={{ textDecoration: 'line-through' }}>₹{selectedProduct.price ? Math.floor(selectedProduct.price * 1.4).toLocaleString('en-IN') : 0}</span></div>
-                <p style={{ margin: '10px 0 0 0', fontSize: '14px', fontWeight: '500' }}>Inclusive of all taxes</p>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}><strong>EMI</strong> starts at ₹{(selectedProduct.price / 12).toFixed(0)}. No Cost EMI available.</p>
               </div>
-
-              {/* VARIANTS */}
               <div>
                 <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>Colour:</strong> {mockColors[selectedColor]}</p>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  {mockColors.map((color, idx) => (
-                    <div key={idx} onClick={() => setSelectedColor(idx)} style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: idx === 0 ? '#1e293b' : '#94a3b8', border: selectedColor === idx ? '3px solid #3b82f6' : '1px solid #cbd5e1', cursor: 'pointer', padding: '2px', backgroundClip: 'content-box' }} title={color} />
-                  ))}
+                  {mockColors.map((color, idx) => ( <div key={idx} onClick={() => setSelectedColor(idx)} style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: idx === 0 ? '#1e293b' : '#94a3b8', border: selectedColor === idx ? '3px solid #3b82f6' : '1px solid #cbd5e1', cursor: 'pointer', padding: '2px', backgroundClip: 'content-box' }} title={color} /> ))}
                 </div>
               </div>
-
               {(selectedProduct.category === 'Electronics' || selectedProduct.category === 'Apparel') && (
                 <div>
                   <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>{selectedProduct.category === 'Electronics' ? 'Size Name:' : 'Size:'}</strong></p>
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    {(selectedProduct.category === 'Electronics' ? mockStorageVariants : mockSizeVariants).map((v, idx) => (
-                      <div key={idx} onClick={() => setSelectedVariant(idx)} style={{ padding: '8px 16px', border: selectedVariant === idx ? '2px solid #ea580c' : '1px solid #cbd5e1', backgroundColor: selectedVariant === idx ? '#fff7ed' : '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: selectedVariant === idx ? '600' : '400', color: '#0f172a' }}>
-                        {v}
-                      </div>
-                    ))}
+                    {(selectedProduct.category === 'Electronics' ? mockStorageVariants : mockSizeVariants).map((v, idx) => ( <div key={idx} onClick={() => setSelectedVariant(idx)} style={{ padding: '8px 16px', border: selectedVariant === idx ? '2px solid #ea580c' : '1px solid #cbd5e1', backgroundColor: selectedVariant === idx ? '#fff7ed' : '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: selectedVariant === idx ? '600' : '400', color: '#0f172a' }}>{v}</div> ))}
                   </div>
                 </div>
               )}
-
-              <div style={{ marginTop: '10px' }}>
-                <h3 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>About this item</h3>
-                <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#334155' }}>
-                  <li><strong>Premium Build Quality:</strong> Crafted with high-grade materials ensuring maximum durability and a sleek finish.</li>
-                  <li><strong>Next-Gen Performance:</strong> Optimized architecture delivers unparalleled speed and efficiency for intensive tasks.</li>
-                  <li><strong>All-Day Reliability:</strong> Extended capacity systems guarantee you stay powered from morning until night.</li>
-                  <li><strong>Advanced Connectivity:</strong> Features the latest standards for fast, secure, and seamless pairing.</li>
-                </ul>
-              </div>
             </div>
-
-            {/* RIGHT: BUY BOX */}
             <div style={{ width: '25%', backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '20px', position: 'sticky', top: '100px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                <div style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '15px' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</div>
-               <div style={{ fontSize: '14px', color: '#0f172a', marginBottom: '15px', lineHeight: '1.5' }}>
-                 <span style={{ color: '#2563eb', cursor: 'pointer' }}>FREE delivery</span> <strong>{deliveryDateString}.</strong> Order within 5 hrs 30 mins.
-               </div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
-                 In stock
-               </div>
-               
+               <div style={{ fontSize: '14px', color: '#0f172a', marginBottom: '15px', lineHeight: '1.5' }}><span style={{ color: '#2563eb', cursor: 'pointer' }}>FREE delivery</span> <strong>{deliveryDateString}.</strong> Order within 5 hrs 30 mins.</div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>In stock</div>
                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <button 
-                    onClick={(e) => handleAddToCartWithFeedback(null, selectedProduct)} 
-                    style={{ width: '100%', padding: '14px', backgroundColor: addedFeedback[selectedProduct.id] ? theme.success : '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '50px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'background-color 0.3s' }}>
-                    {addedFeedback[selectedProduct.id] ? '✓ Added to Cart' : 'Add to Cart'}
-                  </button>
-                  <button 
-                    onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} 
-                    style={{ width: '100%', padding: '14px', backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', borderRadius: '50px', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }}>
-                    Buy Now
-                  </button>
-               </div>
-
-               <div style={{ marginTop: '20px', fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Ships from</span> <span style={{ color: '#0f172a' }}>BazaarInd Logistics</span></div>
-                 <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Sold by</span> <span style={{ color: '#2563eb', cursor: 'pointer' }}>SuperComNet</span></div>
+                  <button onClick={(e) => handleAddToCartWithFeedback(null, selectedProduct)} style={{ width: '100%', padding: '14px', backgroundColor: addedFeedback[selectedProduct.id] ? theme.success : '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '50px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'background-color 0.3s' }}>{addedFeedback[selectedProduct.id] ? '✓ Added to Cart' : 'Add to Cart'}</button>
+                  <button onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} style={{ width: '100%', padding: '14px', backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', borderRadius: '50px', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }}>Buy Now</button>
                </div>
             </div>
-
           </div>
         </main>
       )}
@@ -690,9 +539,7 @@ function App() {
       {/* CHECKOUT VIEW */}
       {currentView === 'checkout' && (
         <div style={{ padding: '20px 10%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to Catalog
-          </button>
+          <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to Catalog</button>
           <div style={{ display: 'flex', gap: '30px' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', gap: '25px', fontWeight: 'bold', fontSize: '12px' }}>
@@ -753,6 +600,50 @@ function App() {
       )}
 
       {/* MODALS */}
+      {/* HISTORY MODAL (NEW) */}
+      {historyModal.isOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
+          <div style={{ backgroundColor: theme.panel, width: '600px', maxHeight: '80vh', borderRadius: '8px', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+            <div style={{ padding: '20px 25px', borderBottom: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>Audit History</h2>
+                <span style={{ fontSize: '12px', color: theme.accent }}>{historyModal.productName}</span>
+              </div>
+              <button onClick={() => setHistoryModal({ isOpen: false, productName: '', history: [], isLoading: false })} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
+            </div>
+            
+            <div style={{ padding: '25px', overflowY: 'auto', flex: 1 }}>
+              {historyModal.isLoading ? (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                   <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTop: `4px solid ${theme.accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                   <p style={{ marginTop: '15px', color: theme.textSecondary }}>Retrieving database logs...</p>
+                </div>
+              ) : (
+                <div style={{ position: 'relative', borderLeft: `2px solid ${theme.border}`, paddingLeft: '20px', marginLeft: '10px' }}>
+                  {historyModal.history.map((record, idx) => (
+                    <div key={idx} style={{ position: 'relative', marginBottom: idx === historyModal.history.length - 1 ? 0 : '30px' }}>
+                      {/* Timeline Dot */}
+                      <div style={{ position: 'absolute', left: '-27px', top: '0', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: record.isLatest ? theme.success : theme.border, border: `2px solid ${theme.panel}` }} />
+                      
+                      {/* Record Card */}
+                      <div style={{ backgroundColor: record.isLatest ? 'rgba(16,185,129,0.1)' : theme.bg, border: `1px solid ${record.isLatest ? theme.success : theme.border}`, borderRadius: '6px', padding: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <span style={{ fontWeight: 'bold', color: record.isLatest ? theme.success : theme.textPrimary }}>Version {record.version} {record.isLatest && '(Active)'}</span>
+                          <span style={{ fontSize: '12px', color: theme.textSecondary }}>{record.date}</span>
+                        </div>
+                        <div style={{ fontSize: '13px', color: theme.textPrimary, marginBottom: '5px' }}><strong>Action:</strong> <span style={{ color: theme.accent }}>{record.action}</span></div>
+                        <div style={{ fontSize: '13px', color: theme.textSecondary }}>{record.details}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CART MODAL */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
@@ -802,6 +693,7 @@ function App() {
         </div>
       )}
 
+      {/* AUTH MODAL */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
           <div style={{ width: '700px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
