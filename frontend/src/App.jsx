@@ -37,6 +37,7 @@ function App() {
   // ADMIN STATE CONTROLS
   const [adminForm, setAdminForm] = useState({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' })
   const [isEditing, setIsEditing] = useState(false)
+  const [adminSearchQuery, setAdminSearchQuery] = useState('') // New state for admin search
 
   // Rotating Billboard Dashboard Cover Arrays
   const [activeBanner, setActiveBanner] = useState(0)
@@ -107,7 +108,7 @@ function App() {
     if (lower.includes('notebook') || lower.includes('diary') || lower.includes('paper')) return "https://images.unsplash.com/photo-1531346878377-a541e4ab0d4c?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('color') || lower.includes('paint') || lower.includes('crayons')) return "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80";
 
-    // --- BROAD CATEGORY LEVEL FALLBACKS (If no keyword hits) ---
+    // --- BROAD CATEGORY LEVEL FALLBACKS ---
     if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
     if (category === "Footwear") return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
     if (category === "Fitness & Lifestyle") return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80";
@@ -136,7 +137,6 @@ function App() {
     }
   }, [currentView, promoBanners.length])
 
-  // COLD BOOT WITH IFRAME DETECTION
   useEffect(() => {
     const isIframe = window !== window.top; 
     const savedUser = localStorage.getItem('bazaarUser')
@@ -145,7 +145,7 @@ function App() {
     if (savedAdminStatus === 'true' && !isIframe) {
       setIsAdmin(true);
       setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
-      setCurrentView('admin');
+      // Removed automatic redirect to 'admin' to let standard tab routing handle it.
     } else if (savedUser) {
       setUser(JSON.parse(savedUser))
     } else if (!isIframe) {
@@ -302,66 +302,6 @@ function App() {
 
   const theme = { bg: '#0f172a', panel: '#1e293b', border: '#334155', textPrimary: '#f8fafc', textSecondary: '#94a3b8', accent: '#f97316', action: '#10b981' }
 
-  // 3.6 SPLIT-SCREEN ADMIN CONTROL PANEL VIEW
-  if (currentView === 'admin' && isAdmin) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', width: '100vw', backgroundColor: theme.bg, color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
-        <div style={{ width: '55%', overflowY: 'auto', padding: '30px', borderRight: `2px solid ${theme.border}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-            <div>
-              <h1 style={{ color: theme.accent, margin: '0 0 5px 0' }}>BazaarInd Command Center</h1>
-              <p style={{ color: theme.textSecondary, fontSize: '14px', margin: 0 }}>Full Spectrum Database Controls</p>
-            </div>
-            <button onClick={() => setCurrentView('home')} style={{ padding: '8px 16px', backgroundColor: theme.panel, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Exit Admin</button>
-          </div>
-
-          <div style={{ backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, marginBottom: '30px' }}>
-            <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
-              {isEditing ? `Editing Product: ${adminForm.id}` : 'Create New Product Record'}
-            </h3>
-            <form onSubmit={handleAdminSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-              <input required type="text" placeholder="Product Title" value={adminForm.name} onChange={e => setAdminForm({...adminForm, name: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              <select value={adminForm.category} onChange={e => setAdminForm({...adminForm, category: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }}>
-                {categoryIcons.filter(c => c.name !== 'All').map(cat => (<option key={cat.name} value={cat.name}>{cat.name}</option>))}
-              </select>
-              <input required type="number" placeholder="Price (₹)" value={adminForm.price} onChange={e => setAdminForm({...adminForm, price: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              <input type="text" placeholder="Promotional Offer Text (e.g., Flat 50% Off)" value={adminForm.offer} onChange={e => setAdminForm({...adminForm, offer: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              <input type="text" placeholder="Custom Image URL (Leave blank for default system image)" value={adminForm.imageUrl} onChange={e => setAdminForm({...adminForm, imageUrl: e.target.value})} style={{ gridColumn: 'span 2', padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              <div style={{ gridColumn: 'span 2', display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: theme.action, color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>{isEditing ? 'COMMIT UPDATES' : 'INJECT NEW RECORD'}</button>
-                {isEditing && <button type="button" onClick={() => { setIsEditing(false); setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); }} style={{ padding: '12px 20px', backgroundColor: theme.bg, color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>}
-              </div>
-            </form>
-          </div>
-          
-          <h3 style={{ margin: '0 0 15px 0' }}>Active Registry Nodes ({products.length})</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {products.map(product => (
-              <div key={product.id} style={{ display: 'flex', gap: '15px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center' }}>
-                <img src={resolvePristineProductImage(product.name, product.category, product.imageUrl)} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '14px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</span>
-                  <span style={{ color: theme.accent, fontSize: '12px', fontWeight: 'bold' }}>₹{product.price}</span> | <span style={{ color: theme.textSecondary, fontSize: '11px' }}>{product.category}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => handleEditClick(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                  <button onClick={() => removeProduct(product.id)} style={{ padding: '8px 12px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Del</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ width: '45%', height: '100%', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: '10px', backgroundColor: theme.accent, color: '#fff', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', zIndex: 10 }}>🟢 LIVE STOREFRONT PREVIEW</div>
-          <iframe src={window.location.origin} title="Live Preview" style={{ width: '100%', height: '100%', border: 'none', paddingTop: '34px' }} />
-        </div>
-      </div>
-    );
-  }
-
-  // ======================================================================
-  // STANDARD USER VIEWPORT BELOW (Home, Catalog, Checkout, etc.)
-  // ======================================================================
   return (
     <div style={{ backgroundColor: theme.bg, minHeight: '100vh', width: '100%', color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
       
@@ -378,7 +318,7 @@ function App() {
           {isAdmin ? (
              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
              <span style={{ fontSize: '13px', color: '#ef4444' }}>Admin Mode</span>
-             <button onClick={() => setCurrentView('admin')} style={{ background: theme.accent, border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Control Panel</button>
+             <button onClick={() => setCurrentView('admin')} style={{ background: currentView === 'admin' ? theme.action : theme.accent, border: 'none', color: '#fff', padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Control Panel</button>
              <button onClick={() => { localStorage.removeItem('bazaarAdmin'); setIsAdmin(false); setUser(null); setCurrentView('home'); }} style={{ background: 'none', border: `1px solid ${theme.accent}`, color: theme.accent, padding: '5px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Disconnect</button>
            </div>
           ) : user ? (
@@ -395,17 +335,87 @@ function App() {
         </div>
       </nav>
 
-      <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto' }}>
-        {categoryIcons.map(cat => {
-          const isActive = selectedCategory === cat.name && (currentView === 'catalog' || currentView === 'product-detail');
-          return (
-            <div key={cat.name} onClick={() => { setSelectedCategory(cat.name); setCurrentView('catalog'); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}>
-              <span style={{ fontSize: '24px', marginBottom: '5px' }}>{cat.icon}</span>
-              <span style={{ fontSize: '12px', fontWeight: 'bold', color: isActive ? '#2874F0' : '#444444' }}>{cat.name.toUpperCase()}</span>
+      {/* Category Icons Bar */}
+      {currentView !== 'admin' && (
+        <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto' }}>
+          {categoryIcons.map(cat => {
+            const isActive = selectedCategory === cat.name && (currentView === 'catalog' || currentView === 'product-detail');
+            return (
+              <div key={cat.name} onClick={() => { setSelectedCategory(cat.name); setCurrentView('catalog'); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}>
+                <span style={{ fontSize: '24px', marginBottom: '5px' }}>{cat.icon}</span>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: isActive ? '#2874F0' : '#444444' }}>{cat.name.toUpperCase()}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* --- INTEGRATED ADMIN TAB VIEW --- */}
+      {currentView === 'admin' && isAdmin && (
+        <main style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
+          {/* Admin Form Column */}
+          <div style={{ width: '40%', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, position: 'sticky', top: '100px' }}>
+            <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
+              {isEditing ? `Editing Product: ${adminForm.id}` : 'Create New Product Record'}
+            </h3>
+            <form onSubmit={handleAdminSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+              <input required type="text" placeholder="Product Title" value={adminForm.name} onChange={e => setAdminForm({...adminForm, name: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
+              <select value={adminForm.category} onChange={e => setAdminForm({...adminForm, category: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }}>
+                {categoryIcons.filter(c => c.name !== 'All').map(cat => (<option key={cat.name} value={cat.name}>{cat.name}</option>))}
+              </select>
+              <input required type="number" placeholder="Price (₹)" value={adminForm.price} onChange={e => setAdminForm({...adminForm, price: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
+              <input type="text" placeholder="Promotional Offer Text" value={adminForm.offer} onChange={e => setAdminForm({...adminForm, offer: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
+              
+              <div>
+                <input type="text" placeholder="Custom Image URL (Leave blank for default system image)" value={adminForm.imageUrl} onChange={e => setAdminForm({...adminForm, imageUrl: e.target.value})} style={{ width: '100%', boxSizing: 'border-box', padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
+                {/* Exposed Image URL for clarity during edits */}
+                <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textSecondary, wordBreak: 'break-all' }}>
+                  <strong>Resolved URL: </strong> 
+                  {adminForm.imageUrl || resolvePristineProductImage(adminForm.name || "Default", adminForm.category)}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: theme.action, color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>{isEditing ? 'COMMIT UPDATES' : 'INJECT NEW RECORD'}</button>
+                {isEditing && <button type="button" onClick={() => { setIsEditing(false); setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); }} style={{ padding: '12px 20px', backgroundColor: theme.bg, color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>}
+              </div>
+            </form>
+          </div>
+          
+          {/* Admin Product List Column */}
+          <div style={{ width: '60%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0 }}>Active Registry Nodes ({products.length})</h3>
+              {/* Added Search Bar for editing ease */}
+              <input 
+                type="text" 
+                placeholder="Search products to edit..." 
+                value={adminSearchQuery}
+                onChange={(e) => setAdminSearchQuery(e.target.value)}
+                style={{ padding: '8px 12px', width: '250px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', outline: 'none' }}
+              />
             </div>
-          );
-        })}
-      </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {products
+                .filter(p => p.name.toLowerCase().includes(adminSearchQuery.toLowerCase()))
+                .map(product => (
+                <div key={product.id} style={{ display: 'flex', gap: '15px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center' }}>
+                  <img src={resolvePristineProductImage(product.name, product.category, product.imageUrl)} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '14px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</span>
+                    <span style={{ color: theme.accent, fontSize: '12px', fontWeight: 'bold' }}>₹{product.price}</span> | <span style={{ color: theme.textSecondary, fontSize: '11px' }}>{product.category}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => handleEditClick(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
+                    <button onClick={() => removeProduct(product.id)} style={{ padding: '8px 12px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Del</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+      )}
 
       {currentView === 'home' && (
         <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '35px' }}>
@@ -461,7 +471,7 @@ function App() {
                   </div>
                   <div>
                     <p style={{ fontSize: '18px', fontWeight: '700', color: theme.textPrimary, margin: '4px 0' }}>₹{product.price.toLocaleString('en-IN')}</p>
-                    <button onClick={(e) => { e.stopPropagation(); addToCart(product); }} style={{ width: '100%', padding: '10px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>Add to Cart</button>
+                    <button onClick={(e) => { e.stopPropagation(); addToCart(product); setShowCartModal(true); }} style={{ width: '100%', padding: '10px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>Add to Cart</button>
                   </div>
                 </div>
               );
@@ -500,7 +510,7 @@ function App() {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                <button onClick={() => addToCart(selectedProduct)} style={{ flex: 1, padding: '16px 0', backgroundColor: '#ff9f00', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
+                <button onClick={() => { addToCart(selectedProduct); setShowCartModal(true); }} style={{ flex: 1, padding: '16px 0', backgroundColor: '#ff9f00', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.004-.05-.004-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86" fill="#fff"></path></svg>
                   ADD TO CART
                 </button>
@@ -589,7 +599,12 @@ function App() {
                     <input key={field} type="text" placeholder={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={shippingAddress[field]} onChange={(e) => setShippingAddress({...shippingAddress, [field]: e.target.value})} style={{ padding: '12px', backgroundColor: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.textPrimary, outline: 'none' }} />
                   ))}
                 </div>
-                <button onClick={() => setCheckoutStep(2)} style={{ marginTop: '25px', padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', float: 'right' }}>SAVE PARAMETERS</button>
+                
+                {/* Back Button explicitly added to Checkout Step 1 */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '25px' }}>
+                  <button onClick={() => setCurrentView('catalog')} style={{ padding: '12px 25px', backgroundColor: 'transparent', color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>BACK TO SHOPPING</button>
+                  <button onClick={() => setCheckoutStep(2)} style={{ padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE PARAMETERS</button>
+                </div>
               </div>
             ) : (
               <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
@@ -602,8 +617,10 @@ function App() {
                     </label>
                   ))}
                 </div>
+                
+                {/* Back Button explicitly returning to Step 1 */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
-                  <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK</button>
+                  <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK TO ADDRESS</button>
                   <button onClick={() => { setCart([]); setCurrentView('order-success'); }} style={{ padding: '12px 35px', backgroundColor: theme.action, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>EXECUTE TRANSACTION</button>
                 </div>
               </div>
@@ -644,7 +661,12 @@ function App() {
             </div>
             
             {cart.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 0', color: theme.textSecondary, flex: 1 }}><span style={{ fontSize: '50px' }}>🛒</span><p style={{ fontWeight: 'bold', marginTop: '15px' }}>Your Shopping Cart is empty.</p></div>
+              <div style={{ textAlign: 'center', padding: '60px 0', color: theme.textSecondary, flex: 1 }}>
+                <span style={{ fontSize: '50px' }}>🛒</span>
+                <p style={{ fontWeight: 'bold', marginTop: '15px' }}>Your Shopping Cart is empty.</p>
+                {/* Explicit Back Button when Cart is Empty */}
+                <button onClick={() => { setShowCartModal(false); setCurrentView('catalog'); }} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'transparent', color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Back to Catalog</button>
+              </div>
             ) : (
               <>
                 <div style={{ overflowY: 'auto', flex: 1, paddingRight: '5px' }}>
@@ -671,7 +693,12 @@ function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '15px', marginBottom: '20px' }}>
                     <span>Total Amount:</span><span style={{ color: theme.action, fontSize: '20px' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
                   </div>
-                  <button onClick={triggerCheckoutPipeline} style={{ width: '100%', backgroundColor: theme.accent, color: theme.textPrimary, padding: '14px', border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}>PLACE ORDER</button>
+                  
+                  {/* Explicit Back Button in populated cart alongside Checkout */}
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => setShowCartModal(false)} style={{ flex: 1, backgroundColor: 'transparent', color: theme.textPrimary, padding: '14px', border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>BACK</button>
+                    <button onClick={triggerCheckoutPipeline} style={{ flex: 2, backgroundColor: theme.accent, color: theme.textPrimary, padding: '14px', border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>PLACE ORDER</button>
+                  </div>
                 </div>
               </>
             )}
