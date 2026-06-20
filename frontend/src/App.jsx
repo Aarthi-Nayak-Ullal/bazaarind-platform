@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-// --- STATIC DATA & HELPERS MOVED OUTSIDE COMPONENT FOR PERFORMANCE ---
+// --- STATIC DATA & HELPERS ---
 const createSlug = (text) => {
   if (!text) return '';
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -12,14 +12,22 @@ const categoryIcons = [
   { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
 ];
 
-const promoBanners = [
-  { title: "EXCLUSIVE DEALS FOR YOU", sub: "Flat 10% Off Up to ₹100 Coupon Applied Automatically", img: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(40,116,240,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
-  { title: "JUNE EPIC HIGH-HARDWARE SALE", sub: "Flat 60% Off Premium Audio Kits & Smart Wearable Components", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(251,100,27,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
-  { title: "SMARTEST SUMMER ECO DEALS", sub: "Power every step with upgraded processing and storage cells", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(16,185,129,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
-];
+// DYNAMIC CATEGORY BANNERS
+const categoryBanners = {
+  'All': [
+    { title: "THE BIG BILLION UPGRADE", sub: "Flagship devices at never-before prices. Up to 40% Off.", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(15,23,42,0.9) 0%, rgba(30,58,138,0.4) 100%)" },
+    { title: "SUMMER ESSENTIALS", sub: "Beat the heat with top-rated appliances. Starting at ₹999.", img: "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(234,88,12,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
+  ],
+  'Electronics': [
+    { title: "NEXT-GEN MONSTERS", sub: "Unleash extreme performance. New Snapdragon Gen 3 Series.", img: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(6,182,212,0.9) 0%, rgba(15,23,42,0.6) 100%)" },
+    { title: "PRO AUDIO GEAR", sub: "Immersive ANC headphones and TWS earbuds. Up to 60% Off.", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(139,92,246,0.9) 0%, rgba(15,23,42,0.6) 100%)" }
+  ],
+  'Apparel': [
+    { title: "TRENDING NOW", sub: "Refresh your wardrobe with the latest summer collections.", img: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(236,72,153,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
+  ]
+};
 
 function App() {
-  // Navigation & Core System State Vectors
   const [currentView, setCurrentView] = useState('home')
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
@@ -27,24 +35,22 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [cart, setCart] = useState([])
   
-  // Rotating Billboard Dashboard Cover Arrays
   const [activeBanner, setActiveBanner] = useState(0)
   
-  // PRODUCT DETAIL PAGE STATE TRACKERS
+  // PRODUCT DETAIL PAGE ADVANCED TRACKERS
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const [activeImageIndex, setActiveImageIndex] = useState(1)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
+  const [selectedVariant, setSelectedVariant] = useState(0)
+  const [selectedColor, setSelectedColor] = useState(0)
 
-  // INFINITE SCROLL & UI FEEDBACK TRACKERS
   const [displayLimit, setDisplayLimit] = useState(24);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [addedFeedback, setAddedFeedback] = useState({});
   const loaderRef = useRef(null);
 
-  // Dynamic Real-Time Calendar Strings
   const [systemDate, setSystemDate] = useState('')
   const [deliveryDateString, setDeliveryDateString] = useState('')
 
-  // User Space Authentication Registers
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -53,18 +59,16 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [legalView, setLegalView] = useState('none')
 
-  // Transaction Flight Modals
   const [showCartModal, setShowCartModal] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState(1)
   const [shippingAddress, setShippingAddress] = useState({ fullName: '', phone: '', pinCode: '', localAddress: '', city: '', state: '' })
   const [paymentMethod, setPaymentMethod] = useState('UPI')
 
-  // ADMIN STATE CONTROLS
   const [adminForm, setAdminForm] = useState({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' })
   const [isEditing, setIsEditing] = useState(false)
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
-  // --- HTML5 HISTORY API INTEGRATION (URL SYNC) ---
+  // URL SYNC
   useEffect(() => {
     try {
       let path = '/';
@@ -76,13 +80,10 @@ function App() {
       } else if (currentView !== 'home') {
         path = `/${currentView}`;
       }
-
       if (window.location.pathname !== path) {
         window.history.pushState({ view: currentView, category: selectedCategory, product: selectedProduct }, '', path);
       }
-    } catch (err) {
-      console.error("URL Sync Error:", err);
-    }
+    } catch (err) {}
   }, [currentView, selectedCategory, selectedProduct]);
 
   useEffect(() => {
@@ -98,23 +99,16 @@ function App() {
           if (matchedCategory) {
             setSelectedCategory(matchedCategory.name);
             setCurrentView('catalog');
-          } else {
-            setCurrentView('home');
-          }
+          } else setCurrentView('home');
         } else if (path === '/catalog') {
           setCurrentView('catalog');
           setSelectedCategory('All');
         } else {
           const view = path.split('/')[1]; 
-          if (['checkout', 'admin', 'order-success'].includes(view)) {
-             setCurrentView(view);
-          } else {
-             setCurrentView('home');
-          }
+          if (['checkout', 'admin', 'order-success'].includes(view)) setCurrentView(view);
+          else setCurrentView('home');
         }
-      } catch (err) {
-        setCurrentView('home');
-      }
+      } catch (err) { setCurrentView('home'); }
     };
 
     const handlePopState = (e) => {
@@ -122,9 +116,7 @@ function App() {
         setCurrentView(e.state.view || 'home');
         setSelectedCategory(e.state.category || 'All');
         if (e.state.product) setSelectedProduct(e.state.product);
-      } else {
-        handleLocationChange();
-      }
+      } else handleLocationChange();
     };
 
     handleLocationChange();
@@ -132,109 +124,56 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE
+  // IMAGE ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && typeof customUrl === 'string' && customUrl.trim() !== '') return customUrl;
     const lower = String(name || '').toLowerCase();
-
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('smartphone') || lower.includes('5g') || lower.includes('mobile')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('smartphone') || lower.includes('5g') || lower.includes('mobile') || lower.includes('pro')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('watch') || lower.includes('band')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('earbuds') || lower.includes('tws') || lower.includes('airpods')) return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('keyboard') || lower.includes('mouse') || lower.includes('pc')) return "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('laptop') || lower.includes('macbook') || lower.includes('notebook computer')) return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('tv') || lower.includes('television') || lower.includes('monitor')) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=600&q=80";
-
-    if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('running')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('formal') || lower.includes('leather')) return "https://images.unsplash.com/photo-1614252339474-1249bdf5499d?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('sandal') || lower.includes('slipper') || lower.includes('flip') || lower.includes('crocs')) return "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('boot') || lower.includes('trekking')) return "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=600&q=80";
-
-    if (lower.includes('dumbbell') || lower.includes('gym') || lower.includes('weight')) return "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('football') || lower.includes('ball') || lower.includes('soccer')) return "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('mat') || lower.includes('yoga')) return "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('protein') || lower.includes('whey') || lower.includes('shaker')) return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('cycle') || lower.includes('bicycle') || lower.includes('bike')) return "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80";
-
-    if (lower.includes('kettle') || lower.includes('boiler')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('cooker') || lower.includes('pan') || lower.includes('kadai') || lower.includes('tawa')) return "https://images.unsplash.com/photo-1584990347449-a1b7e07eb5c8?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('mixer') || lower.includes('grinder') || lower.includes('blender')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80"; 
-    if (lower.includes('bedsheet') || lower.includes('blanket') || lower.includes('pillow') || lower.includes('cover')) return "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('towel') || lower.includes('bath')) return "https://images.unsplash.com/photo-1616627561839-074385245dd6?auto=format&fit=crop&w=600&q=80";
-
-    if (lower.includes('salt') || lower.includes('sugar') || lower.includes('powder') || lower.includes('masala')) return "https://images.unsplash.com/photo-1626015496465-94dc47833a6b?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('oil') || lower.includes('ghee')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('atta') || lower.includes('flour') || lower.includes('rice') || lower.includes('dal') || lower.includes('pulse')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('tea') || lower.includes('coffee')) return "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('biscuit') || lower.includes('snack') || lower.includes('chips') || lower.includes('maggi') || lower.includes('noodle')) return "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('soap') || lower.includes('wash') || lower.includes('shampoo')) return "https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&w=600&q=80";
-
-    if (lower.includes('shirt') || lower.includes('t-shirt') || lower.includes('polo')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('jeans') || lower.includes('trouser') || lower.includes('pant')) return "https://images.unsplash.com/photo-1542272604-780c96850d76?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('saree') || lower.includes('kurta') || lower.includes('ethnic')) return "https://images.unsplash.com/photo-1610030469983-98e550d615ef?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('jacket') || lower.includes('sweater') || lower.includes('hoodie')) return "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('dress') || lower.includes('top') || lower.includes('skirt')) return "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80";
-
-    if (lower.includes('book') || lower.includes('novel') || lower.includes('story')) return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('pen ') || lower.includes('pencil') || lower.includes('marker')) return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('notebook') || lower.includes('diary') || lower.includes('paper')) return "https://images.unsplash.com/photo-1531346878377-a541e4ab0d4c?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('color') || lower.includes('paint') || lower.includes('crayons')) return "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80";
-
+    if (lower.includes('laptop') || lower.includes('macbook')) return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('shoe') || lower.includes('sneaker')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('shirt') || lower.includes('t-shirt')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80";
     if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
-    if (category === "Footwear") return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
-    if (category === "Fitness & Lifestyle") return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80";
-    if (category === "Home & Kitchen") return "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80";
-    if (category === "Groceries") return "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80";
     if (category === "Apparel") return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80";
-    if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80";
-    
     return "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80";
   };
 
   useEffect(() => {
-    const options = { day: 'numeric', month: 'long', year: 'numeric' }
     const today = new Date()
-    setSystemDate(today.toLocaleDateString('en-IN', options))
+    setSystemDate(today.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }))
     const targetArrival = new Date()
     targetArrival.setDate(today.getDate() + 2)
     setDeliveryDateString(targetArrival.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }))
   }, [])
 
+  // DYNAMIC BANNER TIMER
+  const currentBanners = categoryBanners[selectedCategory] || categoryBanners['All'];
   useEffect(() => {
-    if (currentView === 'home') {
-      const bannerTimer = setInterval(() => setActiveBanner((prev) => (prev + 1) % promoBanners.length), 5000)
+    setActiveBanner(0); // Reset animation on category change
+    if (currentView === 'home' || currentView === 'catalog') {
+      const bannerTimer = setInterval(() => setActiveBanner((prev) => (prev + 1) % currentBanners.length), 5000)
       return () => clearInterval(bannerTimer)
     }
-  }, [currentView, promoBanners.length])
+  }, [currentView, selectedCategory, currentBanners.length])
 
-  // DATABASE: FETCH ALL PRODUCTS ON LOAD
   useEffect(() => {
     const isIframe = window !== window.top; 
     const savedUser = localStorage.getItem('bazaarUser')
     const savedAdminStatus = localStorage.getItem('bazaarAdmin')
-    
     if (savedAdminStatus === 'true' && !isIframe) {
-      setIsAdmin(true);
-      setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
-    } else if (savedUser) {
-      setUser(JSON.parse(savedUser))
-    } else if (!isIframe) {
-      setShowAuthModal(true)
-      setIsSignUp(false)
-    }
+      setIsAdmin(true); setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
+    } else if (savedUser) setUser(JSON.parse(savedUser))
+    else if (!isIframe) { setShowAuthModal(true); setIsSignUp(false); }
 
     fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setProducts(data)
-          setFilteredProducts(data)
-        }
-      })
-      .catch(err => console.error("Database connection failure:", err))
+        if (Array.isArray(data)) { setProducts(data); setFilteredProducts(data); }
+      }).catch(err => console.error(err))
   }, [])
 
-  // FILTER LOGIC
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory)
@@ -243,144 +182,75 @@ function App() {
     setDisplayLimit(24);
   }, [selectedCategory, searchQuery, products])
 
-  // INFINITE SCROLL OBSERVER
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && displayLimit < filteredProducts.length) {
         setIsFetchingMore(true);
-        setTimeout(() => {
-          setDisplayLimit(prev => prev + 24);
-          setIsFetchingMore(false);
-        }, 800); 
+        setTimeout(() => { setDisplayLimit(prev => prev + 24); setIsFetchingMore(false); }, 800); 
       }
     }, { rootMargin: "100px" });
-
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [displayLimit, filteredProducts.length]);
 
-
   const handleAuthSubmit = async (e) => {
     e.preventDefault()
     setAuthError('')
-
     if (authForm.email === 'aarthinayaku@gmail.com' && authForm.password === '141503') {
-      setIsAdmin(true);
-      setUser({ name: 'Admin', email: authForm.email });
-      localStorage.setItem('bazaarAdmin', 'true');
-      setShowAuthModal(false);
-      setCurrentView('admin'); 
-      return;
+      setIsAdmin(true); setUser({ name: 'Admin', email: authForm.email }); localStorage.setItem('bazaarAdmin', 'true');
+      setShowAuthModal(false); setCurrentView('admin'); return;
     }
-
     const endpoint = isSignUp ? 'register' : 'login'
     try {
       const response = await fetch(`https://bazaarind-backend.onrender.com/api/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(authForm)
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(authForm)
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.detail || "Authentication mismatch")
-      
-      setUser(data.user)
-      localStorage.setItem('bazaarUser', JSON.stringify(data.user))
-      setShowAuthModal(false)
-      setAuthForm({ name: '', email: '', password: '' })
-    } catch (err) {
-      setAuthError(err.message)
-    }
+      setUser(data.user); localStorage.setItem('bazaarUser', JSON.stringify(data.user));
+      setShowAuthModal(false); setAuthForm({ name: '', email: '', password: '' })
+    } catch (err) { setAuthError(err.message) }
   }
 
   const triggerCheckoutPipeline = () => {
     setShowCartModal(false)
-    if (!user) {
-      setAuthError('Authentication required to checkout.')
-      setShowAuthModal(true)
-    } else {
-      setCheckoutStep(1)
-      setCurrentView('checkout')
-    }
+    if (!user) { setAuthError('Authentication required to checkout.'); setShowAuthModal(true); } 
+    else { setCheckoutStep(1); setCurrentView('checkout'); }
   }
 
-  // --- DATABASE: LIVE ADMIN CRUD OPERATIONS ---
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    
-    const payload = {
-      name: adminForm.name,
-      category: adminForm.category,
-      price: Number(adminForm.price),
-      offer: adminForm.offer || "Standard Offer",
-      imageUrl: adminForm.imageUrl || ""
-    };
-
-    const url = isEditing 
-      ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` 
-      : `https://bazaarind-backend.onrender.com/api/products`;
-    
+    const payload = { name: adminForm.name, category: adminForm.category, price: Number(adminForm.price), offer: adminForm.offer || "Standard Offer", imageUrl: adminForm.imageUrl || "" };
+    const url = isEditing ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` : `https://bazaarind-backend.onrender.com/api/products`;
     const method = isEditing ? 'PUT' : 'POST';
-
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) throw new Error(`Server rejected the ${method} request.`);
-      
+      const response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!response.ok) throw new Error(`Server rejected the request.`);
       const savedData = await response.json();
-      
-      if (isEditing) {
-        setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p));
-        alert("Success: Product updated!");
-      } else {
-        setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]);
-        alert("Success: New product added!");
-      }
-      
-      setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' });
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Database operation failed:", err);
-      alert("Failed to sync with database. Ensure the backend server is running.");
-    }
+      if (isEditing) { setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p)); alert("Success: Product updated!"); } 
+      else { setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]); alert("Success: New product added!"); }
+      setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); setIsEditing(false);
+    } catch (err) { alert("Failed to sync with database."); }
   };
 
   const handleEditClick = (product) => {
-    setIsEditing(true);
-    setAdminForm({
-      id: product.id,
-      name: product.name || '',
-      category: product.category,
-      price: product.price,
-      offer: product.offer || '',
-      imageUrl: product.imageUrl || ''
-    });
+    setIsEditing(true); setAdminForm({ id: product.id, name: product.name || '', category: product.category, price: product.price, offer: product.offer || '', imageUrl: product.imageUrl || '' });
   };
   
-  // --- DATABASE: LIVE DELETE OPERATION ---
   const removeProduct = async (id) => {
     if (window.confirm("WARNING: This will permanently delete the product. Continue?")) {
       try {
         const response = await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Delete rejected by server.');
+        if (!response.ok) throw new Error('Delete rejected.');
         setProducts(products.filter(p => p.id !== id));
-      } catch (err) {
-        console.error("Failed to delete product from database", err);
-        alert("Database connection failed. Could not delete.");
-      }
+      } catch (err) { alert("Database connection failed. Could not delete."); }
     }
   };
 
-  // --- CART LOGIC WITH VISUAL FEEDBACK ---
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingProduct = prevCart.find(item => item.id === product.id);
-      if (existingProduct) {
-        return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-      }
+      if (existingProduct) return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       return [...prevCart, { ...product, quantity: 1 }];
     });
   };
@@ -389,31 +259,46 @@ function App() {
     if (e) e.stopPropagation(); 
     addToCart(product);
     setAddedFeedback(prev => ({ ...prev, [product.id]: true }));
-    setTimeout(() => {
-      setAddedFeedback(prev => ({ ...prev, [product.id]: false }));
-    }, 1500);
+    setTimeout(() => { setAddedFeedback(prev => ({ ...prev, [product.id]: false })); }, 1500);
   };
 
-  const updateCartQuantity = (id, delta) => {
-    setCart(prevCart => prevCart.map(item => {
-      if (item.id === id) {
-        const newQuantity = item.quantity + delta;
-        return { ...item, quantity: newQuantity > 0 ? newQuantity : 0 };
-      }
-      return item;
-    }).filter(item => item.quantity > 0)); 
-  };
-  
+  const updateCartQuantity = (id, delta) => setCart(prevCart => prevCart.map(item => { if (item.id === id) { const newQuantity = item.quantity + delta; return { ...item, quantity: newQuantity > 0 ? newQuantity : 0 }; } return item; }).filter(item => item.quantity > 0)); 
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
   const calculateTotal = () => cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
   const getCartCount = () => cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   const theme = { bg: '#0f172a', panel: '#1e293b', border: '#334155', textPrimary: '#f8fafc', textSecondary: '#94a3b8', accent: '#f97316', action: '#10b981', success: '#10b981' }
 
+  // FAKE VARIANTS FOR PRODUCT DETAILS
+  const mockStorageVariants = ["8GB + 128GB", "12GB + 256GB"];
+  const mockSizeVariants = ["S", "M", "L", "XL"];
+  const mockColors = ["Meteor Black", "Glacier Blue"];
+
   return (
     <div style={{ backgroundColor: theme.bg, minHeight: '100vh', width: '100%', color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
       
-      {/* GLOBAL NAVBAR */}
+      {/* GLOBAL CSS ANIMATIONS */}
+      <style>{`
+        @keyframes kenBurns {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.08); }
+        }
+        @keyframes slideUpFade {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .banner-bg { animation: kenBurns 8s ease-in-out infinite alternate; }
+        .banner-content { animation: slideUpFade 0.8s ease-out forwards; }
+        
+        /* Custom Scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: ${theme.bg}; }
+        ::-webkit-scrollbar-thumb { background: ${theme.border}; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: ${theme.textSecondary}; }
+      `}</style>
+
+      {/* NAVBAR */}
       <nav style={{ backgroundColor: theme.panel, padding: '12px 10%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `1px solid ${theme.border}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
           <div>
@@ -444,28 +329,52 @@ function App() {
         </div>
       </nav>
 
-      {/* CATEGORY BAR (Only on Home View) */}
-      {currentView === 'home' && (
-        <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto' }}>
+      {/* CATEGORY NAV */}
+      {(currentView === 'home' || currentView === 'catalog') && (
+        <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto', position: 'relative', zIndex: 10 }}>
           {categoryIcons.map(cat => {
-            const isActive = selectedCategory === cat.name && (currentView === 'catalog' || currentView === 'product-detail');
+            const isActive = selectedCategory === cat.name;
             return (
               <div key={cat.name} onClick={() => { setSelectedCategory(cat.name); setCurrentView('catalog'); }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease', transform: isActive ? 'scale(1.08)' : 'scale(1)' }}>
                 <span style={{ fontSize: '24px', marginBottom: '5px' }}>{cat.icon}</span>
                 <span style={{ fontSize: '12px', fontWeight: 'bold', color: isActive ? '#2874F0' : '#444444' }}>{cat.name.toUpperCase()}</span>
+                {isActive && <div style={{ height: '3px', width: '100%', backgroundColor: '#2874F0', borderRadius: '2px', marginTop: '6px', position: 'absolute', bottom: '-14px' }} />}
               </div>
             );
           })}
         </div>
       )}
 
+      {/* DYNAMIC PROMO BANNERS */}
+      {(currentView === 'home' || currentView === 'catalog') && (
+        <div style={{ width: '100%', overflow: 'hidden', position: 'relative', height: '320px', backgroundColor: '#000' }}>
+          <div style={{ display: 'flex', width: `${currentBanners.length * 100}%`, height: '100%', transform: `translateX(-${activeBanner * (100 / currentBanners.length)}%)`, transition: 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)' }}>
+            {currentBanners.map((banner, index) => (
+              <div key={index} style={{ width: `${100 / currentBanners.length}%`, height: '100%', position: 'relative', overflow: 'hidden' }}>
+                <div className="banner-bg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundImage: `${banner.gradient}, url("${banner.img}")`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                <div className="banner-content" style={{ position: 'relative', zIndex: 2, padding: '60px 10%', display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                  <span style={{ backgroundColor: '#FB641B', width: 'fit-content', padding: '4px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', color: '#fff', letterSpacing: '1px' }}>{selectedCategory.toUpperCase()} SUPER DEALS</span>
+                  <h2 style={{ fontSize: '42px', margin: '0 0 10px 0', fontWeight: '900', color: '#ffffff', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>{banner.title}</h2>
+                  <p style={{ fontSize: '18px', margin: '0 0 30px 0', color: '#e2e8f0', maxWidth: '600px', textShadow: '0 1px 5px rgba(0,0,0,0.5)' }}>{banner.sub}</p>
+                  {currentView === 'home' && <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '14px 40px', backgroundColor: '#ffffff', color: '#0f172a', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.3)', transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>Explore Now</button>}
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Banner Navigation Dots */}
+          <div style={{ position: 'absolute', bottom: '20px', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', zIndex: 10 }}>
+            {currentBanners.map((_, idx) => (
+              <div key={idx} onClick={() => setActiveBanner(idx)} style={{ width: idx === activeBanner ? '24px' : '8px', height: '8px', borderRadius: '4px', backgroundColor: idx === activeBanner ? '#fff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.3s' }} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ADMIN CONTROL PANEL */}
       {currentView === 'admin' && isAdmin && (
         <main style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
-          <div style={{ width: '40%', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, position: 'sticky', top: '100px' }}>
-            <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
-              {isEditing ? `Edit Product` : 'Add New Product'}
-            </h3>
+           <div style={{ width: '40%', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, position: 'sticky', top: '100px' }}>
+            <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>{isEditing ? `Edit Product` : 'Add New Product'}</h3>
             <form onSubmit={handleAdminSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
               <input required type="text" placeholder="Product Title" value={adminForm.name} onChange={e => setAdminForm({...adminForm, name: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
               <select value={adminForm.category} onChange={e => setAdminForm({...adminForm, category: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }}>
@@ -473,38 +382,22 @@ function App() {
               </select>
               <input required type="number" placeholder="Price (₹)" value={adminForm.price} onChange={e => setAdminForm({...adminForm, price: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
               <input type="text" placeholder="Promotional Offer Text (Optional)" value={adminForm.offer} onChange={e => setAdminForm({...adminForm, offer: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              
               <div>
                 <input type="text" placeholder="Custom Image URL (Optional)" value={adminForm.imageUrl} onChange={e => setAdminForm({...adminForm, imageUrl: e.target.value})} style={{ width: '100%', boxSizing: 'border-box', padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-                <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textSecondary, wordBreak: 'break-all' }}>
-                  <strong>Image Preview URL: </strong> 
-                  {adminForm.imageUrl || resolvePristineProductImage(adminForm.name || "Default", adminForm.category)}
-                </p>
               </div>
-
               <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: theme.action, color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>{isEditing ? 'SAVE CHANGES' : 'ADD PRODUCT'}</button>
                 {isEditing && <button type="button" onClick={() => { setIsEditing(false); setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); }} style={{ padding: '12px 20px', backgroundColor: theme.bg, color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>}
               </div>
             </form>
           </div>
-          
           <div style={{ width: '60%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h3 style={{ margin: 0 }}>Active Products ({products.length})</h3>
-              <input 
-                type="text" 
-                placeholder="Search products to edit..." 
-                value={adminSearchQuery}
-                onChange={(e) => setAdminSearchQuery(e.target.value)}
-                style={{ padding: '8px 12px', width: '250px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', outline: 'none' }}
-              />
+              <input type="text" placeholder="Search products to edit..." value={adminSearchQuery} onChange={(e) => setAdminSearchQuery(e.target.value)} style={{ padding: '8px 12px', width: '250px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', outline: 'none' }} />
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {products
-                .filter(p => String(p.name || '').toLowerCase().includes(adminSearchQuery.toLowerCase()))
-                .map(product => (
+              {products.filter(p => String(p.name || '').toLowerCase().includes(adminSearchQuery.toLowerCase())).map(product => (
                 <div key={product.id} style={{ display: 'flex', gap: '15px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center' }}>
                   <img src={resolvePristineProductImage(product.name, product.category, product.imageUrl)} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -522,209 +415,181 @@ function App() {
         </main>
       )}
 
-      {/* HOME VIEW */}
-      {currentView === 'home' && (
-        <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '35px' }}>
-          <div style={{ width: '100%', overflow: 'hidden', borderRadius: '4px', border: `1px solid ${theme.border}`, position: 'relative', height: '280px' }}>
-            <div style={{ display: 'flex', width: `${promoBanners.length * 100}%`, height: '100%', transform: `translateX(-${activeBanner * (100 / promoBanners.length)}%)`, transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-              {promoBanners.map((banner, index) => (
-                <div key={index} style={{ width: `${100 / promoBanners.length}%`, height: '100%', backgroundImage: `${banner.gradient}, url("${banner.img}")`, backgroundSize: 'cover', backgroundPosition: 'center', padding: '50px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <span style={{ backgroundColor: '#FB641B', width: 'fit-content', padding: '4px 12px', borderRadius: '2px', fontSize: '10px', fontWeight: 'bold', marginBottom: '12px', color: '#fff' }}>BAZAARIND OFFER MODE</span>
-                  <h2 style={{ fontSize: '34px', margin: '0 0 8px 0', fontWeight: '900', color: '#ffffff' }}>{banner.title}</h2>
-                  <p style={{ fontSize: '16px', margin: '0 0 24px 0', color: '#e0e0e0' }}>{banner.sub}</p>
-                  <button onClick={() => setCurrentView('catalog')} style={{ width: 'fit-content', padding: '12px 35px', backgroundColor: '#2874F0', color: '#ffffff', border: 'none', borderRadius: '2px', fontWeight: 'bold', cursor: 'pointer' }}>Shop Now</button>
-                </div>
-              ))}
+      {/* HOME / CATALOG SHARED GRID */}
+      {(currentView === 'home' || currentView === 'catalog') && (
+        <main style={{ padding: '40px 10%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
+            <div>
+              <h2 style={{ fontSize: '22px', color: theme.textPrimary, margin: '0 0 5px 0' }}>
+                {currentView === 'home' ? 'Recommended For You' : `${selectedCategory.toUpperCase()} PRODUCTS`}
+              </h2>
+              <p style={{ margin: 0, fontSize: '13px', color: theme.textSecondary }}>
+                {currentView === 'home' ? 'Handpicked trends based on your activity.' : `Showing ${filteredProducts.length} items`}
+              </p>
             </div>
           </div>
-
-          <div style={{ backgroundColor: theme.panel, padding: '24px', borderRadius: '4px', border: `1px solid ${theme.border}` }}>
-            <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', color: theme.textPrimary }}>Recommended For You 🔥</h3>
-            <p style={{ margin: '0 0 20px 0', fontSize: '12px', color: theme.textSecondary }}>Handpicked products based on current trends.</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
-              {products.slice(0, 4).map((product) => {
-                const accurateImg = resolvePristineProductImage(product.name, product.category, product.imageUrl);
-                return (
-                  <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ border: `1px solid ${theme.border}`, borderRadius: '4px', padding: '15px', textAlign: 'center', cursor: 'pointer', backgroundColor: theme.bg }}>
-                    <div style={{ width: '100%', height: '110px', overflow: 'hidden', borderRadius: '4px', marginBottom: '10px', backgroundColor: theme.panel }}>
-                      <img src={accurateImg} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Asset" />
-                    </div>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</h4>
-                    <p style={{ margin: '4px 0', color: theme.action, fontWeight: 'bold', fontSize: '13px' }}>{product.offer || "Standard Delivery"}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CATALOG VIEW */}
-      {currentView === 'catalog' && (
-        <main style={{ padding: '30px 10%' }}>
-          <button onClick={() => { setCurrentView('home'); setSelectedCategory('All'); }} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '20px' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Back to Home
-          </button>
           
-          <h2 style={{ fontSize: '20px', color: theme.textPrimary, marginBottom: '2px' }}>{selectedCategory.toUpperCase()} PRODUCTS</h2>
-          <p style={{ margin: '0 0 25px 0', fontSize: '12px', color: theme.textSecondary }}>Showing {filteredProducts.length} items</p>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-            {filteredProducts.slice(0, displayLimit).map(product => {
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '25px' }}>
+            {(currentView === 'home' ? products.slice(0, 8) : filteredProducts.slice(0, displayLimit)).map(product => {
               const accurateImg = resolvePristineProductImage(product.name, product.category, product.imageUrl);
+              const discountStr = product.offer || "Special Deal";
               return (
-                <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '6px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '350px', cursor: 'pointer' }}>
-                  <div>
-                    <div style={{ width: '100%', height: '140px', overflow: 'hidden', borderRadius: '4px', marginBottom: '12px', backgroundColor: theme.bg }}>
-                      <img src={accurateImg} alt={product.name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: theme.textPrimary, margin: '0 0 4px 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</h3>
-                    <span style={{ fontSize: '11px', color: theme.action, display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>{product.offer || "Express Delivery"}</span>
+                <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '0', borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.2)'; }} onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                  <div style={{ width: '100%', height: '180px', backgroundColor: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                    <img src={accurateImg} alt={product.name} loading="lazy" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', padding: '15px' }} />
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: '#ef4444', color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '4px 8px', borderRadius: '4px' }}>SALE</div>
                   </div>
-                  <div>
-                    <p style={{ fontSize: '18px', fontWeight: '700', color: theme.textPrimary, margin: '4px 0' }}>₹{product.price ? product.price.toLocaleString('en-IN') : 0}</p>
-                    <button 
-                      onClick={(e) => handleAddToCartWithFeedback(e, product)} 
-                      style={{ 
-                        width: '100%', padding: '10px', 
-                        backgroundColor: addedFeedback[product.id] ? theme.success : theme.accent, 
-                        color: theme.textPrimary, border: 'none', borderRadius: '4px', 
-                        fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'background-color 0.3s ease'
-                      }}>
-                      {addedFeedback[product.id] ? '✓ Added to Cart' : 'Add to Cart'}
-                    </button>
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: theme.textPrimary, margin: '0 0 8px 0', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                      <span style={{ backgroundColor: '#16a34a', color: '#fff', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px' }}>4.5 ★</span>
+                      <span style={{ fontSize: '12px', color: theme.textSecondary }}>(1,204)</span>
+                    </div>
+                    <div style={{ marginTop: 'auto' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '20px', fontWeight: '800', color: theme.textPrimary }}>₹{product.price ? product.price.toLocaleString('en-IN') : 0}</span>
+                        <span style={{ fontSize: '12px', color: theme.textSecondary, textDecoration: 'line-through' }}>₹{product.price ? Math.floor(product.price * 1.4).toLocaleString() : 0}</span>
+                      </div>
+                      <button 
+                        onClick={(e) => handleAddToCartWithFeedback(e, product)} 
+                        style={{ 
+                          width: '100%', padding: '12px', 
+                          backgroundColor: addedFeedback[product.id] ? theme.success : theme.accent, 
+                          color: '#fff', border: 'none', borderRadius: '4px', 
+                          fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', transition: 'background-color 0.3s ease'
+                        }}>
+                        {addedFeedback[product.id] ? '✓ Added' : 'Add to Cart'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
             })}
 
             {/* INFINITE SCROLL TARGET */}
-            {displayLimit < filteredProducts.length && (
+            {currentView === 'catalog' && displayLimit < filteredProducts.length && (
               <div ref={loaderRef} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
                 {isFetchingMore ? (
                   <div style={{ display: 'inline-block', width: '30px', height: '30px', border: '3px solid rgba(255,255,255,0.1)', borderTop: `3px solid ${theme.accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-                ) : (
-                  <div style={{ height: '30px' }} />
-                )}
-                <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                ) : <div style={{ height: '30px' }} />}
               </div>
             )}
           </div>
         </main>
       )}
 
-      {/* PRODUCT DETAIL VIEW */}
+      {/* ADVANCED PRODUCT DETAIL VIEW (AMAZON/FLIPKART STYLE) */}
       {currentView === 'product-detail' && selectedProduct && (
-        <main style={{ padding: '20px 10%', backgroundColor: '#ffffff', color: '#000000', minHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
+        <main style={{ backgroundColor: '#f1f5f9', color: '#0f172a', minHeight: '85vh', paddingBottom: '50px' }}>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-            <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-              Back to Catalog
-            </button>
-            <div style={{ fontSize: '12px', color: '#878787', borderLeft: '1px solid #e0e0e0', paddingLeft: '20px' }}>
-              <span style={{cursor:'pointer'}} onClick={() => setCurrentView('home')}>Home</span> &gt; <span style={{cursor:'pointer'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> &gt; <span style={{ color: '#878787' }}>{selectedProduct.name}</span>
-            </div>
+          <div style={{ backgroundColor: '#fff', padding: '15px 10%', borderBottom: '1px solid #e2e8f0', fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => setCurrentView('home')}>Home</span> / 
+            <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> / 
+            <span style={{ color: '#0f172a' }}>{selectedProduct.name}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '30px' }}>
-            <div style={{ width: '40%', display: 'flex', flexDirection: 'column', position: 'sticky', top: '80px', height: 'fit-content' }}>
-              <div style={{ display: 'flex', gap: '10px', height: '450px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '64px', overflowY: 'auto' }}>
-                  {[1, 2, 3, 4].map((idx) => (
-                    <div key={idx} onMouseEnter={() => setActiveImageIndex(idx)} style={{ width: '64px', height: '64px', border: activeImageIndex === idx ? '2px solid #2874F0' : '1px solid #f0f0f0', padding: '2px', cursor: 'pointer', boxSizing: 'border-box' }}>
-                      <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt="thumb" />
-                    </div>
+          <div style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
+            
+            {/* LEFT: THUMBNAILS & MAIN IMAGE */}
+            <div style={{ width: '40%', display: 'flex', gap: '15px', position: 'sticky', top: '100px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '60px' }}>
+                {[1, 2, 3, 4].map((idx, index) => (
+                  <div key={idx} onMouseEnter={() => setActiveImageIndex(index)} style={{ width: '60px', height: '60px', border: activeImageIndex === index ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: '4px', padding: '4px', cursor: 'pointer', backgroundColor: '#fff' }}>
+                    <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={`View ${idx}`} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ flex: 1, backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '30px', height: '500px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt={selectedProduct.name} />
+              </div>
+            </div>
+
+            {/* CENTER: DETAILS & VARIANTS */}
+            <div style={{ width: '35%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <h1 style={{ fontSize: '24px', fontWeight: '600', color: '#0f172a', margin: '0 0 10px 0', lineHeight: '1.3' }}>{selectedProduct.name}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                     {[1,2,3,4,5].map(s => <span key={s} style={{ color: s===5 ? '#cbd5e1' : '#f59e0b', fontSize: '16px' }}>★</span>)}
+                     <span style={{ color: '#2563eb', fontSize: '14px', marginLeft: '5px' }}>14,592 ratings</span>
+                   </div>
+                   <span style={{ backgroundColor: '#0f172a', color: '#fff', fontSize: '11px', fontWeight: 'bold', padding: '3px 8px', borderRadius: '4px' }}>BazaarInd's Choice</span>
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', padding: '20px 0' }}>
+                <div style={{ color: '#dc2626', fontSize: '20px', fontWeight: '300', marginBottom: '5px' }}>
+                  -{Math.floor(Math.random() * 30 + 10)}% <span style={{ fontSize: '32px', fontWeight: '700', color: '#0f172a', marginLeft: '8px' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</span>
+                </div>
+                <div style={{ fontSize: '13px', color: '#64748b' }}>M.R.P.: <span style={{ textDecoration: 'line-through' }}>₹{selectedProduct.price ? Math.floor(selectedProduct.price * 1.4).toLocaleString('en-IN') : 0}</span></div>
+                <p style={{ margin: '10px 0 0 0', fontSize: '14px', fontWeight: '500' }}>Inclusive of all taxes</p>
+                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}><strong>EMI</strong> starts at ₹{(selectedProduct.price / 12).toFixed(0)}. No Cost EMI available.</p>
+              </div>
+
+              {/* VARIANTS (Dynamic based on Category) */}
+              <div>
+                <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>Colour:</strong> {mockColors[selectedColor]}</p>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {mockColors.map((color, idx) => (
+                    <div key={idx} onClick={() => setSelectedColor(idx)} style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: idx === 0 ? '#1e293b' : '#94a3b8', border: selectedColor === idx ? '3px solid #3b82f6' : '1px solid #cbd5e1', cursor: 'pointer', padding: '2px', backgroundClip: 'content-box' }} title={color} />
                   ))}
                 </div>
-                <div style={{ flex: 1, border: '1px solid #f0f0f0', padding: '20px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt="Main Product" />
-                  <div style={{ position: 'absolute', top: '15px', right: '15px', width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#fff', border: '1px solid #f0f0f0', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#c2c2c2', cursor: 'pointer', fontSize: '18px', boxShadow: '0 1px 4px 0 rgba(0,0,0,0.1)' }}>❤</div>
-                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                <button 
-                  onClick={() => handleAddToCartWithFeedback(null, selectedProduct)} 
-                  style={{ 
-                    flex: 1, padding: '16px 0', 
-                    backgroundColor: addedFeedback[selectedProduct.id] ? theme.success : '#ff9f00', 
-                    color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)', transition: 'background-color 0.3s ease'
-                  }}>
-                  {addedFeedback[selectedProduct.id] ? (
-                    '✓ ADDED TO CART'
-                  ) : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.004-.05-.004-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86" fill="#fff"></path></svg>
-                      ADD TO CART
-                    </>
-                  )}
-                </button>
-                <button onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} style={{ flex: 1, padding: '16px 0', backgroundColor: '#fb641b', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
-                  <svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M11.666 12.336l-1.996-3.79 3.018-2.65L7.33 4.88 5.667 1.33 4.004 4.88 1.332 5.895l3.018 2.65-1.995 3.79 4.312-1.996 4.312 1.996h-.313z" fill="#fff"></path></svg>
-                  BUY NOW
-                </button>
-              </div>
-            </div>
-
-            <div style={{ width: '60%', paddingLeft: '15px' }}>
-              <h1 style={{ fontSize: '18px', fontWeight: '400', color: '#212121', margin: '0 0 10px 0', lineHeight: '1.4' }}>{selectedProduct.name}</h1>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                <span style={{ backgroundColor: '#388e3c', color: '#ffffff', fontSize: '12px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '3px', display: 'flex', alignItems: 'center' }}>4.3 ★</span>
-                <span style={{ fontSize: '14px', color: '#878787', fontWeight: '500' }}>1,917 Ratings & 234 Reviews</span>
-                <span style={{ color: '#2874F0', fontSize: '14px', fontWeight: 'bold' }}>Assured Partner Verified</span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '5px' }}>
-                <span style={{ fontSize: '28px', fontWeight: '500', color: '#212121' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</span>
-                <span style={{ fontSize: '16px', color: '#878787', textDecoration: 'line-through' }}>₹{selectedProduct.price ? (Math.floor(selectedProduct.price * 1.35)).toLocaleString('en-IN') : 0}</span>
-                <span style={{ fontSize: '16px', color: '#388e3c', fontWeight: 'bold' }}>{selectedProduct.offer || "Special Price"}</span>
-              </div>
-              <div style={{ fontSize: '12px', color: '#212121', marginBottom: '25px' }}>+ ₹86 Secured Packaging Fee</div>
-
-              <div style={{ marginBottom: '25px' }}>
-                <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#212121', marginBottom: '10px' }}>Available offers</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}><span style={{ color: '#388e3c', fontWeight: 'bold' }}>🏷️</span> <span><strong style={{fontWeight: 600}}>Bank Offer</strong> 5% Cashback on BazaarInd Axis Bank Card</span></div>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}><span style={{ color: '#388e3c', fontWeight: 'bold' }}>🏷️</span> <span><strong style={{fontWeight: 600}}>Special Price</strong> Get extra 10% off (price inclusive of cashback/coupon)</span></div>
-                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}><span style={{ color: '#388e3c', fontWeight: 'bold' }}>🏷️</span> <span><strong style={{fontWeight: 600}}>Partner Offer</strong> Make a purchase and enjoy a surprise cashback/ coupon that you can redeem later!</span></div>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '20px', fontSize: '14px', borderTop: '1px solid #f0f0f0', paddingTop: '20px' }}>
-                <div style={{ color: '#878787', fontWeight: '500' }}>Delivery</div>
+              {(selectedProduct.category === 'Electronics' || selectedProduct.category === 'Apparel') && (
                 <div>
-                  <div style={{ display: 'flex', gap: '10px', borderBottom: '2px solid #2874F0', width: 'fit-content', paddingBottom: '4px', marginBottom: '10px' }}>
-                    <span style={{ color: '#2874F0' }}>📍</span>
-                    <input type="text" defaultValue="560001" style={{ border: 'none', outline: 'none', fontWeight: '500', width: '80px', color: '#212121' }} />
-                    <span style={{ color: '#2874F0', fontWeight: '500', cursor: 'pointer' }}>Change</span>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>{selectedProduct.category === 'Electronics' ? 'Size Name:' : 'Size:'}</strong></p>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {(selectedProduct.category === 'Electronics' ? mockStorageVariants : mockSizeVariants).map((v, idx) => (
+                      <div key={idx} onClick={() => setSelectedVariant(idx)} style={{ padding: '8px 16px', border: selectedVariant === idx ? '2px solid #ea580c' : '1px solid #cbd5e1', backgroundColor: selectedVariant === idx ? '#fff7ed' : '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: selectedVariant === idx ? '600' : '400', color: '#0f172a' }}>
+                        {v}
+                      </div>
+                    ))}
                   </div>
-                  <p style={{ fontWeight: '500', margin: '0 0 5px 0' }}>Delivery by {deliveryDateString} | <span style={{ color: '#388e3c' }}>Free</span> <span style={{ color: '#878787', textDecoration: 'line-through' }}>₹40</span></p>
-                  <p style={{ color: '#878787', margin: 0, fontSize: '12px' }}>Order within 02h 00m 03s</p>
                 </div>
+              )}
 
-                <div style={{ color: '#878787', fontWeight: '500' }}>Highlights</div>
-                <div>
-                  <ul style={{ margin: 0, paddingLeft: '16px', color: '#212121', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <li>Engineered for High Performance</li>
-                    <li>Extended Usage Durability</li>
-                    <li>1 Year Manufacturer Warranty</li>
-                    <li>Cash on Delivery available</li>
-                  </ul>
-                </div>
-
-                <div style={{ color: '#878787', fontWeight: '500' }}>Seller</div>
-                <div>
-                  <div style={{ color: '#2874F0', fontWeight: '500', marginBottom: '5px' }}>SuperComNet <span style={{ backgroundColor: '#2874F0', color: '#fff', fontSize: '10px', padding: '2px 4px', borderRadius: '8px', marginLeft: '5px' }}>4.8 ★</span></div>
-                  <ul style={{ margin: 0, paddingLeft: '16px', color: '#212121', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <li>7 Days Service Center Replacement/Repair</li>
-                    <li>GST invoice available</li>
-                  </ul>
-                </div>
+              {/* BULLET POINTS */}
+              <div style={{ marginTop: '10px' }}>
+                <h3 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>About this item</h3>
+                <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#334155' }}>
+                  <li><strong>Premium Build Quality:</strong> Crafted with high-grade materials ensuring maximum durability and a sleek finish.</li>
+                  <li><strong>Next-Gen Performance:</strong> Optimized architecture delivers unparalleled speed and efficiency for intensive tasks.</li>
+                  <li><strong>All-Day Reliability:</strong> Extended capacity systems guarantee you stay powered from morning until night.</li>
+                  <li><strong>Advanced Connectivity:</strong> Features the latest standards for fast, secure, and seamless pairing.</li>
+                </ul>
               </div>
             </div>
+
+            {/* RIGHT: BUY BOX */}
+            <div style={{ width: '25%', backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '20px', position: 'sticky', top: '100px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+               <div style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '15px' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</div>
+               <div style={{ fontSize: '14px', color: '#0f172a', marginBottom: '15px', lineHeight: '1.5' }}>
+                 <span style={{ color: '#2563eb', cursor: 'pointer' }}>FREE delivery</span> <strong>{deliveryDateString}.</strong> Order within 5 hrs 30 mins.
+               </div>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16a34a', fontSize: '18px', fontWeight: '600', marginBottom: '20px' }}>
+                 In stock
+               </div>
+               
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button 
+                    onClick={(e) => handleAddToCartWithFeedback(null, selectedProduct)} 
+                    style={{ width: '100%', padding: '14px', backgroundColor: addedFeedback[selectedProduct.id] ? theme.success : '#fbbf24', color: '#0f172a', border: 'none', borderRadius: '50px', fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'background-color 0.3s' }}>
+                    {addedFeedback[selectedProduct.id] ? '✓ Added to Cart' : 'Add to Cart'}
+                  </button>
+                  <button 
+                    onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} 
+                    style={{ width: '100%', padding: '14px', backgroundColor: '#f59e0b', color: '#0f172a', border: 'none', borderRadius: '50px', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }}>
+                    Buy Now
+                  </button>
+               </div>
+
+               <div style={{ marginTop: '20px', fontSize: '13px', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Ships from</span> <span style={{ color: '#0f172a' }}>BazaarInd Logistics</span></div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Sold by</span> <span style={{ color: '#2563eb', cursor: 'pointer' }}>SuperComNet</span></div>
+               </div>
+            </div>
+
           </div>
         </main>
       )}
@@ -732,31 +597,22 @@ function App() {
       {/* CHECKOUT VIEW */}
       {currentView === 'checkout' && (
         <div style={{ padding: '20px 10%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
           <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Back to Catalog
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to Catalog
           </button>
-
           <div style={{ display: 'flex', gap: '30px' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', gap: '25px', fontWeight: 'bold', fontSize: '12px' }}>
-                <span style={{ color: checkoutStep === 1 ? theme.accent : theme.textSecondary }}>① SHIPPING ADDRESS</span>
-                <span style={{ color: theme.border }}>➔</span>
-                <span style={{ color: checkoutStep === 2 ? theme.accent : theme.textSecondary }}>② PAYMENT OPTIONS</span>
+                <span style={{ color: checkoutStep === 1 ? theme.accent : theme.textSecondary }}>① SHIPPING ADDRESS</span> <span style={{ color: theme.border }}>➔</span> <span style={{ color: checkoutStep === 2 ? theme.accent : theme.textSecondary }}>② PAYMENT OPTIONS</span>
               </div>
-
               {checkoutStep === 1 ? (
                 <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
                   <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Enter Delivery Address</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    {['fullName', 'phone', 'pinCode', 'localAddress', 'city', 'state'].map(field => (
-                      <input key={field} type="text" placeholder={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={shippingAddress[field]} onChange={(e) => setShippingAddress({...shippingAddress, [field]: e.target.value})} style={{ padding: '12px', backgroundColor: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.textPrimary, outline: 'none' }} />
-                    ))}
+                    {['fullName', 'phone', 'pinCode', 'localAddress', 'city', 'state'].map(field => ( <input key={field} type="text" placeholder={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={shippingAddress[field]} onChange={(e) => setShippingAddress({...shippingAddress, [field]: e.target.value})} style={{ padding: '12px', backgroundColor: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.textPrimary, outline: 'none' }} /> ))}
                   </div>
-                  
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '25px' }}>
-                    <button onClick={() => setCurrentView('catalog')} style={{ padding: '12px 25px', backgroundColor: 'transparent', color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>BACK TO SHOPPING</button>
+                    <button onClick={() => setCurrentView('catalog')} style={{ padding: '12px 25px', backgroundColor: 'transparent', color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>BACK</button>
                     <button onClick={() => setCheckoutStep(2)} style={{ padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE & CONTINUE</button>
                   </div>
                 </div>
@@ -766,20 +622,17 @@ function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {['BHIM / GooglePay UPI Network', 'Credit or Debit Card Gateway', 'Cash on Delivery (COD)'].map(method => (
                       <label key={method} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', backgroundColor: paymentMethod === method ? 'rgba(249,115,22,0.1)' : theme.bg, borderColor: paymentMethod === method ? theme.accent : theme.border }}>
-                        <input type="radio" checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} style={{ accentColor: theme.accent }} />
-                        <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{method}</span>
+                        <input type="radio" checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} style={{ accentColor: theme.accent }} /> <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{method}</span>
                       </label>
                     ))}
                   </div>
-                  
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
-                    <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK TO ADDRESS</button>
+                    <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK</button>
                     <button onClick={() => { setCart([]); setCurrentView('order-success'); }} style={{ padding: '12px 35px', backgroundColor: theme.action, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>PLACE ORDER</button>
                   </div>
                 </div>
               )}
             </div>
-
             <div style={{ width: '320px', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', height: 'fit-content', border: `1px solid ${theme.border}` }}>
               <h4 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', color: theme.textSecondary, fontSize: '12px' }}>PRICE DETAILS</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', borderBottom: `1px dashed ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
@@ -806,7 +659,7 @@ function App() {
         </div>
       )}
 
-      {/* FLYOUT MODALS */}
+      {/* MODALS (CART & AUTH) - Kept mostly intact from previous robust version */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
@@ -814,11 +667,9 @@ function App() {
               <h2 style={{ margin: 0, fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
               <button onClick={() => setShowCartModal(false)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
             </div>
-            
             {cart.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 0', color: theme.textSecondary, flex: 1 }}>
-                <span style={{ fontSize: '50px' }}>🛒</span>
-                <p style={{ fontWeight: 'bold', marginTop: '15px' }}>Your Shopping Cart is empty.</p>
+                <span style={{ fontSize: '50px' }}>🛒</span><p style={{ fontWeight: 'bold', marginTop: '15px' }}>Your Shopping Cart is empty.</p>
                 <button onClick={() => { setShowCartModal(false); setCurrentView('catalog'); }} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'transparent', color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Back to Catalog</button>
               </div>
             ) : (
@@ -847,7 +698,6 @@ function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '15px', marginBottom: '20px' }}>
                     <span>Total Amount:</span><span style={{ color: theme.action, fontSize: '20px' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
                   </div>
-                  
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button onClick={() => setShowCartModal(false)} style={{ flex: 1, backgroundColor: 'transparent', color: theme.textPrimary, padding: '14px', border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>BACK</button>
                     <button onClick={triggerCheckoutPipeline} style={{ flex: 2, backgroundColor: theme.accent, color: theme.textPrimary, padding: '14px', border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>PLACE ORDER</button>
@@ -859,68 +709,36 @@ function App() {
         </div>
       )}
 
-      {/* AUTH MODAL */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
           <div style={{ width: '700px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
             <button onClick={() => { setShowAuthModal(false); setLegalView('none'); }} style={{ position: 'absolute', top: '16px', right: '20px', background: 'none', border: 'none', fontSize: '24px', color: '#878787', cursor: 'pointer', zIndex: 10, lineHeight: 1 }}>✕</button>
-            
             <div style={{ width: '40%', backgroundColor: '#2874F0', padding: '40px 33px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box', color: '#ffffff' }}>
               <div>
                 <h2 style={{ fontSize: '28px', fontWeight: '500', margin: '0 0 16px 0' }}>{isSignUp ? "Looks like you're new here!" : "Login"}</h2>
-                <p style={{ fontSize: '15px', lineHeight: '1.5', color: '#dbdbdb', margin: 0 }}>
-                  {isSignUp ? "Sign up with your details to get started" : "Get access to your Orders, Wishlist and Recommendations"}
-                </p>
+                <p style={{ fontSize: '15px', lineHeight: '1.5', color: '#dbdbdb', margin: 0 }}>{isSignUp ? "Sign up with your details to get started" : "Get access to your Orders, Wishlist and Recommendations"}</p>
               </div>
               <div style={{ display: 'flex', justifyContent: 'center' }}>
                  <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
-                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                   <line x1="3" y1="6" x2="21" y2="6"></line>
-                   <path d="M16 10a4 4 0 0 1-8 0"></path>
+                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>
                  </svg>
               </div>
             </div>
-
             {legalView === 'none' ? (
               <form onSubmit={handleAuthSubmit} style={{ width: '60%', padding: '50px 35px 16px 35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
                 {authError && <div style={{ backgroundColor: '#ffeae9', color: '#d32f2f', padding: '10px', borderRadius: '4px', fontSize: '13px', marginBottom: '15px', border: '1px solid #f4c7c3' }}>{authError}</div>}
-                
-                {isSignUp && (
-                  <div style={{ marginBottom: '25px', position: 'relative' }}>
-                    <input type="text" placeholder="Enter Full Name" required value={authForm.name} onChange={(e) => setAuthForm({...authForm, name: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} />
-                  </div>
-                )}
-                
-                <div style={{ marginBottom: '25px', position: 'relative' }}>
-                  <input type="email" placeholder="Enter Email Address" required value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} />
-                </div>
-                
-                <div style={{ marginBottom: '35px', position: 'relative' }}>
-                  <input type="password" placeholder="Enter Password" required value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} />
-                </div>
-
-                <div style={{ fontSize: '12px', color: '#878787', marginBottom: '20px', lineHeight: '1.5' }}>
-                  By continuing, you agree to BazaarInd's <span style={{ color: '#2874F0', cursor: 'pointer' }} onClick={() => setLegalView('terms')}>Terms of Use</span> and <span style={{ color: '#2874F0', cursor: 'pointer' }} onClick={() => setLegalView('privacy')}>Privacy Policy</span>.
-                </div>
-
+                {isSignUp && ( <div style={{ marginBottom: '25px', position: 'relative' }}> <input type="text" placeholder="Enter Full Name" required value={authForm.name} onChange={(e) => setAuthForm({...authForm, name: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} /> </div> )}
+                <div style={{ marginBottom: '25px', position: 'relative' }}> <input type="email" placeholder="Enter Email Address" required value={authForm.email} onChange={(e) => setAuthForm({...authForm, email: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} /> </div>
+                <div style={{ marginBottom: '35px', position: 'relative' }}> <input type="password" placeholder="Enter Password" required value={authForm.password} onChange={(e) => setAuthForm({...authForm, password: e.target.value})} style={{ width: '100%', border: 'none', borderBottom: '1px solid #e0e0e0', outline: 'none', fontSize: '15px', padding: '8px 0', color: '#000000', transition: 'border-color 0.2s' }} onFocus={(e) => e.target.style.borderBottom = '1px solid #2874F0'} onBlur={(e) => e.target.style.borderBottom = '1px solid #e0e0e0'} /> </div>
+                <div style={{ fontSize: '12px', color: '#878787', marginBottom: '20px', lineHeight: '1.5' }}>By continuing, you agree to BazaarInd's <span style={{ color: '#2874F0', cursor: 'pointer' }} onClick={() => setLegalView('terms')}>Terms of Use</span> and <span style={{ color: '#2874F0', cursor: 'pointer' }} onClick={() => setLegalView('privacy')}>Privacy Policy</span>.</div>
                 <button type="submit" style={{ backgroundColor: '#FB641B', color: '#ffffff', border: 'none', width: '100%', padding: '14px 0', borderRadius: '2px', fontSize: '15px', fontWeight: '500', cursor: 'pointer', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.2)' }}>{isSignUp ? "Continue" : "Login"}</button>
-                
-                <div style={{ marginTop: 'auto', textAlign: 'center' }}>
-                  <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ background: 'none', border: 'none', color: '#2874F0', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}>
-                    {isSignUp ? "Existing User? Log in" : "New to BazaarInd? Create an account"}
-                  </button>
-                </div>
+                <div style={{ marginTop: 'auto', textAlign: 'center' }}> <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} style={{ background: 'none', border: 'none', color: '#2874F0', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}> {isSignUp ? "Existing User? Log in" : "New to BazaarInd? Create an account"} </button> </div>
               </form>
             ) : (
               <div style={{ width: '60%', padding: '35px', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
-                <div onClick={() => setLegalView('none')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                  Back to {isSignUp ? "Sign Up" : "Login"}
-                </div>
+                <div onClick={() => setLegalView('none')} style={{ color: '#2874F0', cursor: 'pointer', fontWeight: '600', fontSize: '14px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to {isSignUp ? "Sign Up" : "Login"} </div>
                 <h3 style={{ margin: '0 0 15px 0', color: '#212121' }}>{legalView === 'terms' ? "Terms of Use" : "Privacy Policy"}</h3>
-                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#555', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #f0f0f0', paddingTop: '15px' }}>
-                    <p>This is a demonstration environment. No real data is processed or stored securely for production use. By using this platform, you acknowledge it is an engineering prototype.</p>
-                </div>
+                <div style={{ flex: 1, overflowY: 'auto', paddingRight: '10px', color: '#555', fontSize: '13px', lineHeight: '1.6', borderTop: '1px solid #f0f0f0', paddingTop: '15px' }}> <p>This is a demonstration environment. No real data is processed or stored securely for production use. By using this platform, you acknowledge it is an engineering prototype.</p> </div>
               </div>
             )}
           </div>
