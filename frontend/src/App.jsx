@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 
 // --- STATIC DATA & HELPERS MOVED OUTSIDE COMPONENT FOR PERFORMANCE ---
-const createSlug = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+// Added safe string parsing to prevent crashes if text is undefined
+const createSlug = (text) => {
+  if (!text) return '';
+  return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+};
 
 const categoryIcons = [
   { name: 'All', icon: '✨' }, { name: 'Electronics', icon: '📱' }, { name: 'Home & Kitchen', icon: '🍳' },
@@ -58,47 +62,56 @@ function App() {
 
   // 1. Sync State -> URL Address Bar
   useEffect(() => {
-    let path = '/';
-    if (currentView === 'catalog') {
-      if (selectedCategory === 'All') path = '/catalog';
-      else path = `/category/${createSlug(selectedCategory)}`;
-    } else if (currentView === 'product-detail' && selectedProduct) {
-      path = `/product/${createSlug(selectedProduct.name)}`;
-    } else if (currentView !== 'home') {
-      path = `/${currentView}`;
-    }
+    try {
+      let path = '/';
+      if (currentView === 'catalog') {
+        if (selectedCategory === 'All') path = '/catalog';
+        else path = `/category/${createSlug(selectedCategory)}`;
+      } else if (currentView === 'product-detail' && selectedProduct) {
+        path = `/product/${createSlug(selectedProduct.name)}`;
+      } else if (currentView !== 'home') {
+        path = `/${currentView}`;
+      }
 
-    if (window.location.pathname !== path) {
-      window.history.pushState({ view: currentView, category: selectedCategory, product: selectedProduct }, '', path);
+      if (window.location.pathname !== path) {
+        window.history.pushState({ view: currentView, category: selectedCategory, product: selectedProduct }, '', path);
+      }
+    } catch (err) {
+      console.error("URL Sync Error:", err);
     }
   }, [currentView, selectedCategory, selectedProduct]);
 
   // 2. Sync URL Address Bar -> State (Browser Back/Forward & Direct Links)
   useEffect(() => {
     const handleLocationChange = () => {
-      const path = window.location.pathname;
-      if (path === '/' || path === '') {
-        setCurrentView('home');
-        setSelectedCategory('All');
-      } else if (path.startsWith('/category/')) {
-        const slug = path.split('/category/')[1];
-        const matchedCategory = categoryIcons.find(c => createSlug(c.name) === slug);
-        if (matchedCategory) {
-          setSelectedCategory(matchedCategory.name);
-          setCurrentView('catalog');
-        } else {
+      try {
+        const path = window.location.pathname;
+        if (path === '/' || path === '') {
           setCurrentView('home');
-        }
-      } else if (path === '/catalog') {
-        setCurrentView('catalog');
-        setSelectedCategory('All');
-      } else {
-        const view = path.split('/')[1]; 
-        if (['checkout', 'admin', 'order-success'].includes(view)) {
-           setCurrentView(view);
+          setSelectedCategory('All');
+        } else if (path.startsWith('/category/')) {
+          const slug = path.split('/category/')[1];
+          const matchedCategory = categoryIcons.find(c => createSlug(c.name) === slug);
+          if (matchedCategory) {
+            setSelectedCategory(matchedCategory.name);
+            setCurrentView('catalog');
+          } else {
+            setCurrentView('home');
+          }
+        } else if (path === '/catalog') {
+          setCurrentView('catalog');
+          setSelectedCategory('All');
         } else {
-           setCurrentView('home');
+          const view = path.split('/')[1]; 
+          if (['checkout', 'admin', 'order-success'].includes(view)) {
+             setCurrentView(view);
+          } else {
+             setCurrentView('home');
+          }
         }
+      } catch (err) {
+        console.error("Location Change Handler Error:", err);
+        setCurrentView('home');
       }
     };
 
@@ -120,10 +133,12 @@ function App() {
   }, []);
 
 
-  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE
+  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE (WITH DEFENSIVE NULL CHECKS)
   const resolvePristineProductImage = (name, category, customUrl) => {
-    if (customUrl && customUrl.trim() !== '') return customUrl;
-    const lower = name.toLowerCase();
+    if (customUrl && typeof customUrl === 'string' && customUrl.trim() !== '') return customUrl;
+    
+    // Defensive string conversion
+    const lower = String(name || '').toLowerCase();
 
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('smartphone') || lower.includes('5g') || lower.includes('mobile')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
@@ -224,7 +239,8 @@ function App() {
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory)
-    if (searchQuery.trim() !== '') result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    // Defensive string check for search filter
+    if (searchQuery.trim() !== '') result = result.filter(p => String(p.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
     setFilteredProducts(result)
   }, [selectedCategory, searchQuery, products])
 
@@ -315,7 +331,7 @@ function App() {
     setIsEditing(true);
     setAdminForm({
       id: product.id,
-      name: product.name,
+      name: product.name || '',
       category: product.category,
       price: product.price,
       offer: product.offer || '',
@@ -354,8 +370,9 @@ function App() {
     }).filter(item => item.quantity > 0)); 
   };
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
-  const calculateTotal = () => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const getCartCount = () => cart.reduce((sum, item) => sum + item.quantity, 0);
+  // Added safe fallback for cart calculations
+  const calculateTotal = () => cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+  const getCartCount = () => cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   const theme = { bg: '#0f172a', panel: '#1e293b', border: '#334155', textPrimary: '#f8fafc', textSecondary: '#94a3b8', accent: '#f97316', action: '#10b981' }
 
@@ -449,7 +466,8 @@ function App() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {products
-                .filter(p => p.name.toLowerCase().includes(adminSearchQuery.toLowerCase()))
+                // Defensive string check in admin filter
+                .filter(p => String(p.name || '').toLowerCase().includes(adminSearchQuery.toLowerCase()))
                 .map(product => (
                 <div key={product.id} style={{ display: 'flex', gap: '15px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center' }}>
                   <img src={resolvePristineProductImage(product.name, product.category, product.imageUrl)} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
@@ -526,7 +544,7 @@ function App() {
                     <span style={{ fontSize: '11px', color: theme.action, display: 'block', marginBottom: '6px', fontWeight: 'bold' }}>{product.offer || "Express Network Delivery"}</span>
                   </div>
                   <div>
-                    <p style={{ fontSize: '18px', fontWeight: '700', color: theme.textPrimary, margin: '4px 0' }}>₹{product.price.toLocaleString('en-IN')}</p>
+                    <p style={{ fontSize: '18px', fontWeight: '700', color: theme.textPrimary, margin: '4px 0' }}>₹{product.price ? product.price.toLocaleString('en-IN') : 0}</p>
                     <button onClick={(e) => { e.stopPropagation(); addToCart(product); setShowCartModal(true); }} style={{ width: '100%', padding: '10px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>Add to Cart</button>
                   </div>
                 </div>
@@ -587,8 +605,8 @@ function App() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '5px' }}>
-                <span style={{ fontSize: '28px', fontWeight: '500', color: '#212121' }}>₹{selectedProduct.price.toLocaleString('en-IN')}</span>
-                <span style={{ fontSize: '16px', color: '#878787', textDecoration: 'line-through' }}>₹{(Math.floor(selectedProduct.price * 1.35)).toLocaleString('en-IN')}</span>
+                <span style={{ fontSize: '28px', fontWeight: '500', color: '#212121' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</span>
+                <span style={{ fontSize: '16px', color: '#878787', textDecoration: 'line-through' }}>₹{selectedProduct.price ? (Math.floor(selectedProduct.price * 1.35)).toLocaleString('en-IN') : 0}</span>
                 <span style={{ fontSize: '16px', color: '#388e3c', fontWeight: 'bold' }}>{selectedProduct.offer || "Special Price"}</span>
               </div>
               <div style={{ fontSize: '12px', color: '#212121', marginBottom: '25px' }}>+ ₹86 Protect Promise Fee</div>
