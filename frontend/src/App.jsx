@@ -32,8 +32,6 @@ function App() {
   
   // PRODUCT DETAIL PAGE STATE TRACKERS
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const [selectedColor, setSelectedColor] = useState(0)
-  const [selectedSize, setSelectedSize] = useState(0)
   const [activeImageIndex, setActiveImageIndex] = useState(1)
 
   // INFINITE SCROLL & UI FEEDBACK TRACKERS
@@ -67,8 +65,6 @@ function App() {
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
   // --- HTML5 HISTORY API INTEGRATION (URL SYNC) ---
-
-  // 1. Sync State -> URL Address Bar
   useEffect(() => {
     try {
       let path = '/';
@@ -89,7 +85,6 @@ function App() {
     }
   }, [currentView, selectedCategory, selectedProduct]);
 
-  // 2. Sync URL Address Bar -> State (Browser Back/Forward & Direct Links)
   useEffect(() => {
     const handleLocationChange = () => {
       try {
@@ -118,7 +113,6 @@ function App() {
           }
         }
       } catch (err) {
-        console.error("Location Change Handler Error:", err);
         setCurrentView('home');
       }
     };
@@ -138,7 +132,7 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE (WITH DEFENSIVE NULL CHECKS)
+  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && typeof customUrl === 'string' && customUrl.trim() !== '') return customUrl;
     const lower = String(name || '').toLowerCase();
@@ -213,6 +207,7 @@ function App() {
     }
   }, [currentView, promoBanners.length])
 
+  // DATABASE: FETCH ALL PRODUCTS ON LOAD
   useEffect(() => {
     const isIframe = window !== window.top; 
     const savedUser = localStorage.getItem('bazaarUser')
@@ -236,33 +231,31 @@ function App() {
           setFilteredProducts(data)
         }
       })
-      .catch(err => console.error("Database cloud cluster stream failure:", err))
+      .catch(err => console.error("Database connection failure:", err))
   }, [])
 
-  // FILTER LOGIC (Resets limit back to 24 when searching/switching categories)
+  // FILTER LOGIC
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory)
     if (searchQuery.trim() !== '') result = result.filter(p => String(p.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
     setFilteredProducts(result)
-    setDisplayLimit(24); // Reset the infinite scroll limit on new searches
+    setDisplayLimit(24);
   }, [selectedCategory, searchQuery, products])
 
-  // INFINITE SCROLL OBSERVER (The "Loading Buffer" Logic)
+  // INFINITE SCROLL OBSERVER
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && displayLimit < filteredProducts.length) {
         setIsFetchingMore(true);
-        // Simulate brief network delay for the buffer feel
         setTimeout(() => {
-          setDisplayLimit(prev => prev + 24); // Load next 24 records
+          setDisplayLimit(prev => prev + 24);
           setIsFetchingMore(false);
         }, 800); 
       }
     }, { rootMargin: "100px" });
 
     if (loaderRef.current) observer.observe(loaderRef.current);
-    
     return () => observer.disconnect();
   }, [displayLimit, filteredProducts.length]);
 
@@ -310,14 +303,11 @@ function App() {
     }
   }
 
+  // --- DATABASE: LIVE ADMIN CRUD OPERATIONS ---
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    const url = isEditing 
-      ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` 
-      : `https://bazaarind-backend.onrender.com/api/products`;
     
-    const method = isEditing ? 'PUT' : 'POST';
-    
+    // Build the request payload
     const payload = {
       name: adminForm.name,
       category: adminForm.category,
@@ -326,26 +316,41 @@ function App() {
       imageUrl: adminForm.imageUrl || ""
     };
 
+    // Determine URL and Method based on whether we are Editing or Creating
+    const url = isEditing 
+      ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` 
+      : `https://bazaarind-backend.onrender.com/api/products`;
+    
+    const method = isEditing ? 'PUT' : 'POST';
+
     try {
+      // 1. Send data to live database
       const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      const data = await response.json();
       
+      if (!response.ok) throw new Error(`Server rejected the ${method} request.`);
+      
+      const savedData = await response.json();
+      
+      // 2. Update local React state to instantly reflect database changes
       if (isEditing) {
         setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p));
-        alert("Product updated successfully!");
+        alert("Success: Database row updated!");
       } else {
-        setProducts([...products, { id: data.id || Math.random().toString(), ...payload }]);
-        alert("New product created!");
+        // Use the real ID generated by the backend
+        setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]);
+        alert("Success: New row inserted into Database!");
       }
       
+      // 3. Clear the form
       setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' });
       setIsEditing(false);
     } catch (err) {
-      console.error("Operation failed", err);
+      console.error("Database operation failed:", err);
+      alert("Failed to sync with database. Ensure the backend server is running.");
     }
   };
 
@@ -361,13 +366,20 @@ function App() {
     });
   };
   
+  // --- DATABASE: LIVE DELETE OPERATION ---
   const removeProduct = async (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
+    if (window.confirm("WARNING: This will permanently delete the row from the live database. Continue?")) {
       try {
-        await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
+        // Send DELETE to live database
+        const response = await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
+        
+        if (!response.ok) throw new Error('Delete rejected by server.');
+        
+        // Update local React state
         setProducts(products.filter(p => p.id !== id));
       } catch (err) {
-        console.error("Failed to delete product", err);
+        console.error("Failed to delete product from database", err);
+        alert("Database connection failed. Could not delete.");
       }
     }
   };
@@ -384,13 +396,9 @@ function App() {
   };
 
   const handleAddToCartWithFeedback = (e, product) => {
-    if (e) e.stopPropagation(); // Prevents clicking the button from opening the product details
+    if (e) e.stopPropagation(); 
     addToCart(product);
-    
-    // Trigger visual success state
     setAddedFeedback(prev => ({ ...prev, [product.id]: true }));
-    
-    // Remove success state after 1.5 seconds
     setTimeout(() => {
       setAddedFeedback(prev => ({ ...prev, [product.id]: false }));
     }, 1500);
@@ -415,6 +423,7 @@ function App() {
   return (
     <div style={{ backgroundColor: theme.bg, minHeight: '100vh', width: '100%', color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
       
+      {/* GLOBAL NAVBAR */}
       <nav style={{ backgroundColor: theme.panel, padding: '12px 10%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100, borderBottom: `1px solid ${theme.border}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
           <div>
@@ -445,6 +454,7 @@ function App() {
         </div>
       </nav>
 
+      {/* CATEGORY BAR (Only on Home View) */}
       {currentView === 'home' && (
         <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto' }}>
           {categoryIcons.map(cat => {
@@ -459,6 +469,7 @@ function App() {
         </div>
       )}
 
+      {/* ADMIN CONTROL PANEL */}
       {currentView === 'admin' && isAdmin && (
         <main style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
           <div style={{ width: '40%', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', border: `1px solid ${theme.border}`, position: 'sticky', top: '100px' }}>
@@ -490,7 +501,7 @@ function App() {
           
           <div style={{ width: '60%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h3 style={{ margin: 0 }}>Active Registry Nodes ({products.length})</h3>
+              <h3 style={{ margin: 0 }}>Live Database Records ({products.length})</h3>
               <input 
                 type="text" 
                 placeholder="Search products to edit..." 
@@ -521,6 +532,7 @@ function App() {
         </main>
       )}
 
+      {/* HOME VIEW */}
       {currentView === 'home' && (
         <div style={{ padding: '25px 10%', display: 'flex', flexDirection: 'column', gap: '35px' }}>
           <div style={{ width: '100%', overflow: 'hidden', borderRadius: '4px', border: `1px solid ${theme.border}`, position: 'relative', height: '280px' }}>
@@ -557,6 +569,7 @@ function App() {
         </div>
       )}
 
+      {/* CATALOG VIEW */}
       {currentView === 'catalog' && (
         <main style={{ padding: '30px 10%' }}>
           <button onClick={() => { setCurrentView('home'); setSelectedCategory('All'); }} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '20px' }}>
@@ -567,7 +580,6 @@ function App() {
           <h2 style={{ fontSize: '20px', color: theme.textPrimary, marginBottom: '2px' }}>{selectedCategory.toUpperCase()} REGISTRY INDEX</h2>
           <p style={{ margin: '0 0 25px 0', fontSize: '12px', color: theme.textSecondary }}>Resolved Node Count Capacity: {filteredProducts.length} entries streaming live</p>
           
-          {/* UPDATED MAPPING WITH INFINITE SCROLL SLICE */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
             {filteredProducts.slice(0, displayLimit).map(product => {
               const accurateImg = resolvePristineProductImage(product.name, product.category, product.imageUrl);
@@ -582,7 +594,6 @@ function App() {
                   </div>
                   <div>
                     <p style={{ fontSize: '18px', fontWeight: '700', color: theme.textPrimary, margin: '4px 0' }}>₹{product.price ? product.price.toLocaleString('en-IN') : 0}</p>
-                    {/* ENHANCED BUTTON WITH VISUAL FEEDBACK */}
                     <button 
                       onClick={(e) => handleAddToCartWithFeedback(e, product)} 
                       style={{ 
@@ -598,7 +609,7 @@ function App() {
               );
             })}
 
-            {/* INFINITE SCROLL SPINNER TARGET */}
+            {/* INFINITE SCROLL TARGET */}
             {displayLimit < filteredProducts.length && (
               <div ref={loaderRef} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
                 {isFetchingMore ? (
@@ -613,6 +624,7 @@ function App() {
         </main>
       )}
 
+      {/* PRODUCT DETAIL VIEW */}
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ padding: '20px 10%', backgroundColor: '#ffffff', color: '#000000', minHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
           
@@ -643,7 +655,6 @@ function App() {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                {/* DETAIL PAGE: ENHANCED ADD TO CART BUTTON WITH FEEDBACK */}
                 <button 
                   onClick={() => handleAddToCartWithFeedback(null, selectedProduct)} 
                   style={{ 
@@ -728,6 +739,7 @@ function App() {
         </main>
       )}
 
+      {/* CHECKOUT VIEW */}
       {currentView === 'checkout' && (
         <div style={{ padding: '20px 10%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
@@ -792,6 +804,7 @@ function App() {
         </div>
       )}
 
+      {/* SUCCESS VIEW */}
       {currentView === 'order-success' && (
         <div style={{ textAlign: 'center', padding: '80px 10%' }}>
           <div style={{ backgroundColor: theme.panel, display: 'inline-block', padding: '50px 70px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
@@ -856,6 +869,7 @@ function App() {
         </div>
       )}
 
+      {/* AUTH MODAL */}
       {showAuthModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, fontFamily: 'Roboto, Arial, sans-serif' }}>
           <div style={{ width: '700px', height: '528px', backgroundColor: '#ffffff', borderRadius: '4px', display: 'flex', overflow: 'hidden', boxShadow: '0 4px 16px 0 rgba(0, 0, 0, 0.2)', position: 'relative' }}>
