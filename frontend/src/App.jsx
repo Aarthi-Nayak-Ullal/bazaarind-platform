@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 // --- STATIC DATA & HELPERS MOVED OUTSIDE COMPONENT FOR PERFORMANCE ---
 const createSlug = (text) => {
@@ -27,7 +27,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [cart, setCart] = useState([])
   
-  // Rotating Billboard Dashboard Cover Arrays (RESTORED)
+  // Rotating Billboard Dashboard Cover Arrays
   const [activeBanner, setActiveBanner] = useState(0)
   
   // PRODUCT DETAIL PAGE STATE TRACKERS
@@ -35,6 +35,12 @@ function App() {
   const [selectedColor, setSelectedColor] = useState(0)
   const [selectedSize, setSelectedSize] = useState(0)
   const [activeImageIndex, setActiveImageIndex] = useState(1)
+
+  // INFINITE SCROLL & UI FEEDBACK TRACKERS
+  const [displayLimit, setDisplayLimit] = useState(24);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [addedFeedback, setAddedFeedback] = useState({});
+  const loaderRef = useRef(null);
 
   // Dynamic Real-Time Calendar Strings
   const [systemDate, setSystemDate] = useState('')
@@ -127,19 +133,14 @@ function App() {
       }
     };
 
-    // Run once on cold boot to read initial URL
     handleLocationChange();
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-
   // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE (WITH DEFENSIVE NULL CHECKS)
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && typeof customUrl === 'string' && customUrl.trim() !== '') return customUrl;
-    
-    // Defensive string conversion
     const lower = String(name || '').toLowerCase();
 
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
@@ -238,13 +239,33 @@ function App() {
       .catch(err => console.error("Database cloud cluster stream failure:", err))
   }, [])
 
+  // FILTER LOGIC (Resets limit back to 24 when searching/switching categories)
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory)
-    // Defensive string check for search filter
     if (searchQuery.trim() !== '') result = result.filter(p => String(p.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
     setFilteredProducts(result)
+    setDisplayLimit(24); // Reset the infinite scroll limit on new searches
   }, [selectedCategory, searchQuery, products])
+
+  // INFINITE SCROLL OBSERVER (The "Loading Buffer" Logic)
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && displayLimit < filteredProducts.length) {
+        setIsFetchingMore(true);
+        // Simulate brief network delay for the buffer feel
+        setTimeout(() => {
+          setDisplayLimit(prev => prev + 24); // Load next 24 records
+          setIsFetchingMore(false);
+        }, 800); 
+      }
+    }, { rootMargin: "100px" });
+
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    
+    return () => observer.disconnect();
+  }, [displayLimit, filteredProducts.length]);
+
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault()
@@ -289,7 +310,6 @@ function App() {
     }
   }
 
-  // --- FULL CRUD ADMIN HELPER FUNCTIONS ---
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
     const url = isEditing 
@@ -352,7 +372,7 @@ function App() {
     }
   };
 
-  // --- CART LOGIC ---
+  // --- CART LOGIC WITH VISUAL FEEDBACK ---
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingProduct = prevCart.find(item => item.id === product.id);
@@ -362,6 +382,20 @@ function App() {
       return [...prevCart, { ...product, quantity: 1 }];
     });
   };
+
+  const handleAddToCartWithFeedback = (e, product) => {
+    if (e) e.stopPropagation(); // Prevents clicking the button from opening the product details
+    addToCart(product);
+    
+    // Trigger visual success state
+    setAddedFeedback(prev => ({ ...prev, [product.id]: true }));
+    
+    // Remove success state after 1.5 seconds
+    setTimeout(() => {
+      setAddedFeedback(prev => ({ ...prev, [product.id]: false }));
+    }, 1500);
+  };
+
   const updateCartQuantity = (id, delta) => {
     setCart(prevCart => prevCart.map(item => {
       if (item.id === id) {
@@ -371,12 +405,12 @@ function App() {
       return item;
     }).filter(item => item.quantity > 0)); 
   };
+  
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
-  // Added safe fallback for cart calculations
   const calculateTotal = () => cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
   const getCartCount = () => cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  const theme = { bg: '#0f172a', panel: '#1e293b', border: '#334155', textPrimary: '#f8fafc', textSecondary: '#94a3b8', accent: '#f97316', action: '#10b981' }
+  const theme = { bg: '#0f172a', panel: '#1e293b', border: '#334155', textPrimary: '#f8fafc', textSecondary: '#94a3b8', accent: '#f97316', action: '#10b981', success: '#10b981' }
 
   return (
     <div style={{ backgroundColor: theme.bg, minHeight: '100vh', width: '100%', color: theme.textPrimary, fontFamily: 'Arial, sans-serif' }}>
@@ -406,7 +440,7 @@ function App() {
             <button onClick={() => { setShowAuthModal(true); setIsSignUp(false); setLegalView('none'); }} style={{ backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', padding: '8px 26px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}>Login</button>
           )}
           <div onClick={() => setShowCartModal(true)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '4px', backgroundColor: theme.bg, border: `1px solid ${theme.border}` }}>
-            <span>🛒</span> Cart <span style={{ backgroundColor: theme.accent, color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '12px' }}>{getCartCount()}</span>
+            <span>🛒</span> Cart <span style={{ backgroundColor: theme.accent, color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', transition: 'all 0.3s' }}>{getCartCount()}</span>
           </div>
         </div>
       </nav>
@@ -468,7 +502,6 @@ function App() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {products
-                // Defensive string check in admin filter
                 .filter(p => String(p.name || '').toLowerCase().includes(adminSearchQuery.toLowerCase()))
                 .map(product => (
                 <div key={product.id} style={{ display: 'flex', gap: '15px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center' }}>
@@ -533,8 +566,10 @@ function App() {
           
           <h2 style={{ fontSize: '20px', color: theme.textPrimary, marginBottom: '2px' }}>{selectedCategory.toUpperCase()} REGISTRY INDEX</h2>
           <p style={{ margin: '0 0 25px 0', fontSize: '12px', color: theme.textSecondary }}>Resolved Node Count Capacity: {filteredProducts.length} entries streaming live</p>
+          
+          {/* UPDATED MAPPING WITH INFINITE SCROLL SLICE */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
-            {filteredProducts.map(product => {
+            {filteredProducts.slice(0, displayLimit).map(product => {
               const accurateImg = resolvePristineProductImage(product.name, product.category, product.imageUrl);
               return (
                 <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '6px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '350px', cursor: 'pointer' }}>
@@ -547,11 +582,33 @@ function App() {
                   </div>
                   <div>
                     <p style={{ fontSize: '18px', fontWeight: '700', color: theme.textPrimary, margin: '4px 0' }}>₹{product.price ? product.price.toLocaleString('en-IN') : 0}</p>
-                    <button onClick={(e) => { e.stopPropagation(); addToCart(product); setShowCartModal(true); }} style={{ width: '100%', padding: '10px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer' }}>Add to Cart</button>
+                    {/* ENHANCED BUTTON WITH VISUAL FEEDBACK */}
+                    <button 
+                      onClick={(e) => handleAddToCartWithFeedback(e, product)} 
+                      style={{ 
+                        width: '100%', padding: '10px', 
+                        backgroundColor: addedFeedback[product.id] ? theme.success : theme.accent, 
+                        color: theme.textPrimary, border: 'none', borderRadius: '4px', 
+                        fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', transition: 'background-color 0.3s ease'
+                      }}>
+                      {addedFeedback[product.id] ? '✓ Added to Cart' : 'Add to Cart'}
+                    </button>
                   </div>
                 </div>
               );
             })}
+
+            {/* INFINITE SCROLL SPINNER TARGET */}
+            {displayLimit < filteredProducts.length && (
+              <div ref={loaderRef} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 0' }}>
+                {isFetchingMore ? (
+                  <div style={{ display: 'inline-block', width: '30px', height: '30px', border: '3px solid rgba(255,255,255,0.1)', borderTop: `3px solid ${theme.accent}`, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                ) : (
+                  <div style={{ height: '30px' }} />
+                )}
+                <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+              </div>
+            )}
           </div>
         </main>
       )}
@@ -586,9 +643,22 @@ function App() {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-                <button onClick={() => { addToCart(selectedProduct); setShowCartModal(true); }} style={{ flex: 1, padding: '16px 0', backgroundColor: '#ff9f00', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.004-.05-.004-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86" fill="#fff"></path></svg>
-                  ADD TO CART
+                {/* DETAIL PAGE: ENHANCED ADD TO CART BUTTON WITH FEEDBACK */}
+                <button 
+                  onClick={() => handleAddToCartWithFeedback(null, selectedProduct)} 
+                  style={{ 
+                    flex: 1, padding: '16px 0', 
+                    backgroundColor: addedFeedback[selectedProduct.id] ? theme.success : '#ff9f00', 
+                    color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)', transition: 'background-color 0.3s ease'
+                  }}>
+                  {addedFeedback[selectedProduct.id] ? (
+                    '✓ ADDED TO CART'
+                  ) : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="white"><path d="M15.32 2.405H4.887C3 2.405 2.46.805 2.46.805L2.257.21C2.208.085 2.083 0 1.946 0H.336C.1 0-.064.24.024.46l.644 1.945L3.11 9.767c.047.137.175.23.32.23h8.418l-.493 1.958H3.768l.002.003c-.017 0-.033-.004-.05-.004-1.06 0-1.92.86-1.92 1.92s.86 1.92 1.92 1.92c.99 0 1.805-.75 1.91-1.712l5.55.076c.12.922.91 1.636 1.867 1.636 1.04 0 1.885-.844 1.885-1.885 0-.866-.584-1.593-1.38-1.814l2.423-8.832c.12-.433-.206-.86-.655-.86" fill="#fff"></path></svg>
+                      ADD TO CART
+                    </>
+                  )}
                 </button>
                 <button onClick={() => { addToCart(selectedProduct); triggerCheckoutPipeline(); }} style={{ flex: 1, padding: '16px 0', backgroundColor: '#fb641b', color: '#fff', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', boxShadow: '0 1px 2px 0 rgba(0,0,0,.2)' }}>
                   <svg width="14" height="16" viewBox="0 0 14 16" fill="white"><path d="M11.666 12.336l-1.996-3.79 3.018-2.65L7.33 4.88 5.667 1.33 4.004 4.88 1.332 5.895l3.018 2.65-1.995 3.79 4.312-1.996 4.312 1.996h-.313z" fill="#fff"></path></svg>
@@ -738,7 +808,7 @@ function App() {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
-              <h2 style={{ margin: '0 0 18px', fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
+              <h2 style={{ margin: 0, fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
               <button onClick={() => setShowCartModal(false)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
             </div>
             
