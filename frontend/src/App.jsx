@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-// --- STATIC DATA & HELPERS ---
+// --- STATIC DATA & HELPERS MOVED OUTSIDE COMPONENT FOR PERFORMANCE ---
 const createSlug = (text) => {
   if (!text) return '';
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -12,22 +12,14 @@ const categoryIcons = [
   { name: 'Footwear', icon: '👟' }, { name: 'Books & Stationery', icon: '📚' }
 ];
 
-// DYNAMIC CATEGORY BANNERS
-const categoryBanners = {
-  'All': [
-    { title: "THE BIG BILLION UPGRADE", sub: "Flagship devices at never-before prices. Up to 40% Off.", img: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(15,23,42,0.9) 0%, rgba(30,58,138,0.4) 100%)" },
-    { title: "SUMMER ESSENTIALS", sub: "Beat the heat with top-rated appliances. Starting at ₹999.", img: "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(234,88,12,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
-  ],
-  'Electronics': [
-    { title: "NEXT-GEN MONSTERS", sub: "Unleash extreme performance. New Snapdragon Gen 3 Series.", img: "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(6,182,212,0.9) 0%, rgba(15,23,42,0.6) 100%)" },
-    { title: "PRO AUDIO GEAR", sub: "Immersive ANC headphones and TWS earbuds. Up to 60% Off.", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(139,92,246,0.9) 0%, rgba(15,23,42,0.6) 100%)" }
-  ],
-  'Apparel': [
-    { title: "TRENDING NOW", sub: "Refresh your wardrobe with the latest summer collections.", img: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(236,72,153,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
-  ]
-};
+const promoBanners = [
+  { title: "EXCLUSIVE DEALS FOR YOU", sub: "Flat 10% Off Up to ₹100 Coupon Applied Automatically", img: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(40,116,240,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
+  { title: "JUNE EPIC HIGH-HARDWARE SALE", sub: "Flat 60% Off Premium Audio Kits & Smart Wearable Components", img: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(251,100,27,0.9) 0%, rgba(15,23,42,0.4) 100%)" },
+  { title: "SMARTEST SUMMER ECO DEALS", sub: "Power every step with upgraded processing and storage cells", img: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80", gradient: "linear-gradient(90deg, rgba(16,185,129,0.9) 0%, rgba(15,23,42,0.4) 100%)" }
+];
 
 function App() {
+  // Navigation & Core System State Vectors
   const [currentView, setCurrentView] = useState('home')
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
@@ -35,6 +27,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [cart, setCart] = useState([])
   
+  // Rotating Billboard Dashboard Cover Arrays
   const [activeBanner, setActiveBanner] = useState(0)
   
   // PRODUCT DETAIL PAGE ADVANCED TRACKERS
@@ -43,14 +36,17 @@ function App() {
   const [selectedVariant, setSelectedVariant] = useState(0)
   const [selectedColor, setSelectedColor] = useState(0)
 
+  // INFINITE SCROLL & UI FEEDBACK TRACKERS
   const [displayLimit, setDisplayLimit] = useState(24);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [addedFeedback, setAddedFeedback] = useState({});
   const loaderRef = useRef(null);
 
+  // Dynamic Real-Time Calendar Strings
   const [systemDate, setSystemDate] = useState('')
   const [deliveryDateString, setDeliveryDateString] = useState('')
 
+  // User Space Authentication Registers
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -59,16 +55,18 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [legalView, setLegalView] = useState('none')
 
+  // Transaction Flight Modals
   const [showCartModal, setShowCartModal] = useState(false)
   const [checkoutStep, setCheckoutStep] = useState(1)
   const [shippingAddress, setShippingAddress] = useState({ fullName: '', phone: '', pinCode: '', localAddress: '', city: '', state: '' })
   const [paymentMethod, setPaymentMethod] = useState('UPI')
 
+  // ADMIN STATE CONTROLS
   const [adminForm, setAdminForm] = useState({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' })
   const [isEditing, setIsEditing] = useState(false)
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
-  // URL SYNC
+  // --- HTML5 HISTORY API INTEGRATION (URL SYNC) ---
   useEffect(() => {
     try {
       let path = '/';
@@ -80,10 +78,13 @@ function App() {
       } else if (currentView !== 'home') {
         path = `/${currentView}`;
       }
+
       if (window.location.pathname !== path) {
         window.history.pushState({ view: currentView, category: selectedCategory, product: selectedProduct }, '', path);
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("URL Sync Error:", err);
+    }
   }, [currentView, selectedCategory, selectedProduct]);
 
   useEffect(() => {
@@ -99,16 +100,23 @@ function App() {
           if (matchedCategory) {
             setSelectedCategory(matchedCategory.name);
             setCurrentView('catalog');
-          } else setCurrentView('home');
+          } else {
+            setCurrentView('home');
+          }
         } else if (path === '/catalog') {
           setCurrentView('catalog');
           setSelectedCategory('All');
         } else {
           const view = path.split('/')[1]; 
-          if (['checkout', 'admin', 'order-success'].includes(view)) setCurrentView(view);
-          else setCurrentView('home');
+          if (['checkout', 'admin', 'order-success'].includes(view)) {
+             setCurrentView(view);
+          } else {
+             setCurrentView('home');
+          }
         }
-      } catch (err) { setCurrentView('home'); }
+      } catch (err) {
+        setCurrentView('home');
+      }
     };
 
     const handlePopState = (e) => {
@@ -116,7 +124,9 @@ function App() {
         setCurrentView(e.state.view || 'home');
         setSelectedCategory(e.state.category || 'All');
         if (e.state.product) setSelectedProduct(e.state.product);
-      } else handleLocationChange();
+      } else {
+        handleLocationChange();
+      }
     };
 
     handleLocationChange();
@@ -124,19 +134,62 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // IMAGE ENGINE
+  // MASSIVELY EXPANDED IMAGE RESOLUTION ENGINE
   const resolvePristineProductImage = (name, category, customUrl) => {
     if (customUrl && typeof customUrl === 'string' && customUrl.trim() !== '') return customUrl;
     const lower = String(name || '').toLowerCase();
+
     if (lower.includes('headphone')) return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('smartphone') || lower.includes('5g') || lower.includes('mobile') || lower.includes('pro')) return "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('watch') || lower.includes('band')) return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80";
     if (lower.includes('earbuds') || lower.includes('tws') || lower.includes('airpods')) return "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('laptop') || lower.includes('macbook')) return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('shoe') || lower.includes('sneaker')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
-    if (lower.includes('shirt') || lower.includes('t-shirt')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('keyboard') || lower.includes('mouse') || lower.includes('pc')) return "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('laptop') || lower.includes('macbook') || lower.includes('notebook computer')) return "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('tv') || lower.includes('television') || lower.includes('monitor')) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=600&q=80";
+
+    if (lower.includes('shoe') || lower.includes('sneaker') || lower.includes('running')) return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('formal') || lower.includes('leather')) return "https://images.unsplash.com/photo-1614252339474-1249bdf5499d?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('sandal') || lower.includes('slipper') || lower.includes('flip') || lower.includes('crocs')) return "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('boot') || lower.includes('trekking')) return "https://images.unsplash.com/photo-1520639888713-7851133b1ed0?auto=format&fit=crop&w=600&q=80";
+
+    if (lower.includes('dumbbell') || lower.includes('gym') || lower.includes('weight')) return "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('football') || lower.includes('ball') || lower.includes('soccer')) return "https://images.unsplash.com/photo-1614632537190-23e4146777db?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('mat') || lower.includes('yoga')) return "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('protein') || lower.includes('whey') || lower.includes('shaker')) return "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cycle') || lower.includes('bicycle') || lower.includes('bike')) return "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80";
+
+    if (lower.includes('kettle') || lower.includes('boiler')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('cooker') || lower.includes('pan') || lower.includes('kadai') || lower.includes('tawa')) return "https://images.unsplash.com/photo-1584990347449-a1b7e07eb5c8?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('mixer') || lower.includes('grinder') || lower.includes('blender')) return "https://images.unsplash.com/photo-1585515320310-259814833e62?auto=format&fit=crop&w=600&q=80"; 
+    if (lower.includes('bedsheet') || lower.includes('blanket') || lower.includes('pillow') || lower.includes('cover')) return "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('towel') || lower.includes('bath')) return "https://images.unsplash.com/photo-1616627561839-074385245dd6?auto=format&fit=crop&w=600&q=80";
+
+    if (lower.includes('salt') || lower.includes('sugar') || lower.includes('powder') || lower.includes('masala')) return "https://images.unsplash.com/photo-1626015496465-94dc47833a6b?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('oil') || lower.includes('ghee')) return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('atta') || lower.includes('flour') || lower.includes('rice') || lower.includes('dal') || lower.includes('pulse')) return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('tea') || lower.includes('coffee')) return "https://images.unsplash.com/photo-1597075687490-8f673c6c17f6?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('biscuit') || lower.includes('snack') || lower.includes('chips') || lower.includes('maggi') || lower.includes('noodle')) return "https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('soap') || lower.includes('wash') || lower.includes('shampoo')) return "https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&w=600&q=80";
+
+    if (lower.includes('shirt') || lower.includes('t-shirt') || lower.includes('polo')) return "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('jeans') || lower.includes('trouser') || lower.includes('pant')) return "https://images.unsplash.com/photo-1542272604-780c96850d76?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('saree') || lower.includes('kurta') || lower.includes('ethnic')) return "https://images.unsplash.com/photo-1610030469983-98e550d615ef?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('jacket') || lower.includes('sweater') || lower.includes('hoodie')) return "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('dress') || lower.includes('top') || lower.includes('skirt')) return "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80";
+
+    if (lower.includes('book') || lower.includes('novel') || lower.includes('story')) return "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('pen ') || lower.includes('pencil') || lower.includes('marker')) return "https://images.unsplash.com/photo-1585336261022-680e295ce3fe?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('notebook') || lower.includes('diary') || lower.includes('paper')) return "https://images.unsplash.com/photo-1531346878377-a541e4ab0d4c?auto=format&fit=crop&w=600&q=80";
+    if (lower.includes('color') || lower.includes('paint') || lower.includes('crayons')) return "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=600&q=80";
+
     if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
+    if (category === "Footwear") return "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80";
+    if (category === "Fitness & Lifestyle") return "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80";
+    if (category === "Home & Kitchen") return "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80";
+    if (category === "Groceries") return "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80";
     if (category === "Apparel") return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80";
+    if (category === "Books & Stationery") return "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80";
+    
     return "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80";
   };
 
@@ -158,22 +211,34 @@ function App() {
     }
   }, [currentView, selectedCategory, currentBanners.length])
 
+  // DATABASE: FETCH ALL PRODUCTS ON LOAD
   useEffect(() => {
     const isIframe = window !== window.top; 
     const savedUser = localStorage.getItem('bazaarUser')
     const savedAdminStatus = localStorage.getItem('bazaarAdmin')
+    
     if (savedAdminStatus === 'true' && !isIframe) {
-      setIsAdmin(true); setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
-    } else if (savedUser) setUser(JSON.parse(savedUser))
-    else if (!isIframe) { setShowAuthModal(true); setIsSignUp(false); }
+      setIsAdmin(true);
+      setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
+    } else if (savedUser) {
+      setUser(JSON.parse(savedUser))
+    } else if (!isIframe) {
+      setShowAuthModal(true)
+      setIsSignUp(false)
+    }
 
     fetch('https://bazaarind-backend.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) { setProducts(data); setFilteredProducts(data); }
-      }).catch(err => console.error(err))
+        if (Array.isArray(data)) {
+          setProducts(data)
+          setFilteredProducts(data)
+        }
+      })
+      .catch(err => console.error("Database connection failure:", err))
   }, [])
 
+  // FILTER LOGIC
   useEffect(() => {
     let result = products
     if (selectedCategory !== 'All') result = result.filter(p => p.category === selectedCategory)
@@ -182,75 +247,144 @@ function App() {
     setDisplayLimit(24);
   }, [selectedCategory, searchQuery, products])
 
+  // INFINITE SCROLL OBSERVER
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && displayLimit < filteredProducts.length) {
         setIsFetchingMore(true);
-        setTimeout(() => { setDisplayLimit(prev => prev + 24); setIsFetchingMore(false); }, 800); 
+        setTimeout(() => {
+          setDisplayLimit(prev => prev + 24);
+          setIsFetchingMore(false);
+        }, 800); 
       }
     }, { rootMargin: "100px" });
+
     if (loaderRef.current) observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [displayLimit, filteredProducts.length]);
 
+
   const handleAuthSubmit = async (e) => {
     e.preventDefault()
     setAuthError('')
+
     if (authForm.email === 'aarthinayaku@gmail.com' && authForm.password === '141503') {
-      setIsAdmin(true); setUser({ name: 'Admin', email: authForm.email }); localStorage.setItem('bazaarAdmin', 'true');
-      setShowAuthModal(false); setCurrentView('admin'); return;
+      setIsAdmin(true);
+      setUser({ name: 'Admin', email: authForm.email });
+      localStorage.setItem('bazaarAdmin', 'true');
+      setShowAuthModal(false);
+      setCurrentView('admin'); 
+      return;
     }
+
     const endpoint = isSignUp ? 'register' : 'login'
     try {
       const response = await fetch(`https://bazaarind-backend.onrender.com/api/${endpoint}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(authForm)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(authForm)
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.detail || "Authentication mismatch")
-      setUser(data.user); localStorage.setItem('bazaarUser', JSON.stringify(data.user));
-      setShowAuthModal(false); setAuthForm({ name: '', email: '', password: '' })
-    } catch (err) { setAuthError(err.message) }
+      
+      setUser(data.user)
+      localStorage.setItem('bazaarUser', JSON.stringify(data.user))
+      setShowAuthModal(false)
+      setAuthForm({ name: '', email: '', password: '' })
+    } catch (err) {
+      setAuthError(err.message)
+    }
   }
 
   const triggerCheckoutPipeline = () => {
     setShowCartModal(false)
-    if (!user) { setAuthError('Authentication required to checkout.'); setShowAuthModal(true); } 
-    else { setCheckoutStep(1); setCurrentView('checkout'); }
+    if (!user) {
+      setAuthError('Authentication required to checkout.')
+      setShowAuthModal(true)
+    } else {
+      setCheckoutStep(1)
+      setCurrentView('checkout')
+    }
   }
 
+  // --- DATABASE: LIVE ADMIN CRUD OPERATIONS ---
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
-    const payload = { name: adminForm.name, category: adminForm.category, price: Number(adminForm.price), offer: adminForm.offer || "Standard Offer", imageUrl: adminForm.imageUrl || "" };
-    const url = isEditing ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` : `https://bazaarind-backend.onrender.com/api/products`;
+    
+    const payload = {
+      name: adminForm.name,
+      category: adminForm.category,
+      price: Number(adminForm.price),
+      offer: adminForm.offer || "Standard Offer",
+      imageUrl: adminForm.imageUrl || ""
+    };
+
+    const url = isEditing 
+      ? `https://bazaarind-backend.onrender.com/api/products/${adminForm.id}` 
+      : `https://bazaarind-backend.onrender.com/api/products`;
+    
     const method = isEditing ? 'PUT' : 'POST';
+
     try {
-      const response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!response.ok) throw new Error(`Server rejected the request.`);
+      const response = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) throw new Error(`Server rejected the ${method} request.`);
+      
       const savedData = await response.json();
-      if (isEditing) { setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p)); alert("Success: Product updated!"); } 
-      else { setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]); alert("Success: New product added!"); }
-      setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); setIsEditing(false);
-    } catch (err) { alert("Failed to sync with database."); }
+      
+      if (isEditing) {
+        setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p));
+        alert("Success: Product updated!");
+      } else {
+        setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]);
+        alert("Success: New product added!");
+      }
+      
+      setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' });
+      setIsEditing(false);
+    } catch (err) {
+      console.error("Database operation failed:", err);
+      alert("Failed to sync with database. Ensure the backend server is running.");
+    }
   };
 
   const handleEditClick = (product) => {
-    setIsEditing(true); setAdminForm({ id: product.id, name: product.name || '', category: product.category, price: product.price, offer: product.offer || '', imageUrl: product.imageUrl || '' });
+    setIsEditing(true);
+    setAdminForm({
+      id: product.id,
+      name: product.name || '',
+      category: product.category,
+      price: product.price,
+      offer: product.offer || '',
+      imageUrl: product.imageUrl || ''
+    });
   };
   
+  // --- DATABASE: LIVE DELETE OPERATION ---
   const removeProduct = async (id) => {
     if (window.confirm("WARNING: This will permanently delete the product. Continue?")) {
       try {
         const response = await fetch(`https://bazaarind-backend.onrender.com/api/products/${id}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Delete rejected.');
+        if (!response.ok) throw new Error('Delete rejected by server.');
         setProducts(products.filter(p => p.id !== id));
-      } catch (err) { alert("Database connection failed. Could not delete."); }
+      } catch (err) {
+        console.error("Failed to delete product from database", err);
+        alert("Database connection failed. Could not delete.");
+      }
     }
   };
 
+  // --- CART LOGIC WITH VISUAL FEEDBACK ---
   const addToCart = (product) => {
     setCart(prevCart => {
       const existingProduct = prevCart.find(item => item.id === product.id);
-      if (existingProduct) return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      if (existingProduct) {
+        return prevCart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+      }
       return [...prevCart, { ...product, quantity: 1 }];
     });
   };
@@ -259,10 +393,21 @@ function App() {
     if (e) e.stopPropagation(); 
     addToCart(product);
     setAddedFeedback(prev => ({ ...prev, [product.id]: true }));
-    setTimeout(() => { setAddedFeedback(prev => ({ ...prev, [product.id]: false })); }, 1500);
+    setTimeout(() => {
+      setAddedFeedback(prev => ({ ...prev, [product.id]: false }));
+    }, 1500);
   };
 
-  const updateCartQuantity = (id, delta) => setCart(prevCart => prevCart.map(item => { if (item.id === id) { const newQuantity = item.quantity + delta; return { ...item, quantity: newQuantity > 0 ? newQuantity : 0 }; } return item; }).filter(item => item.quantity > 0)); 
+  const updateCartQuantity = (id, delta) => {
+    setCart(prevCart => prevCart.map(item => {
+      if (item.id === id) {
+        const newQuantity = item.quantity + delta;
+        return { ...item, quantity: newQuantity > 0 ? newQuantity : 0 };
+      }
+      return item;
+    }).filter(item => item.quantity > 0)); 
+  };
+  
   const removeFromCart = (id) => setCart(cart.filter(item => item.id !== id));
   const calculateTotal = () => cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
   const getCartCount = () => cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
@@ -361,7 +506,6 @@ function App() {
               </div>
             ))}
           </div>
-          {/* Banner Navigation Dots */}
           <div style={{ position: 'absolute', bottom: '20px', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', zIndex: 10 }}>
             {currentBanners.map((_, idx) => (
               <div key={idx} onClick={() => setActiveBanner(idx)} style={{ width: idx === activeBanner ? '24px' : '8px', height: '8px', borderRadius: '4px', backgroundColor: idx === activeBanner ? '#fff' : 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'all 0.3s' }} />
@@ -432,7 +576,6 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '25px' }}>
             {(currentView === 'home' ? products.slice(0, 8) : filteredProducts.slice(0, displayLimit)).map(product => {
               const accurateImg = resolvePristineProductImage(product.name, product.category, product.imageUrl);
-              const discountStr = product.offer || "Special Deal";
               return (
                 <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '0', borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.2)'; }} onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
                   <div style={{ width: '100%', height: '180px', backgroundColor: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
@@ -482,10 +625,17 @@ function App() {
       {currentView === 'product-detail' && selectedProduct && (
         <main style={{ backgroundColor: '#f1f5f9', color: '#0f172a', minHeight: '85vh', paddingBottom: '50px' }}>
           
-          <div style={{ backgroundColor: '#fff', padding: '15px 10%', borderBottom: '1px solid #e2e8f0', fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => setCurrentView('home')}>Home</span> / 
-            <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> / 
-            <span style={{ color: '#0f172a' }}>{selectedProduct.name}</span>
+          <div style={{ backgroundColor: '#fff', padding: '15px 10%', borderBottom: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* EXPLICIT BACK BUTTON ADDED HERE */}
+            <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back to Catalog
+            </button>
+            <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => setCurrentView('home')}>Home</span> / 
+              <span style={{cursor:'pointer', color: '#2563eb'}} onClick={() => { setSelectedCategory(selectedProduct.category); setCurrentView('catalog'); }}>{selectedProduct.category}</span> / 
+              <span style={{ color: '#0f172a' }}>{selectedProduct.name}</span>
+            </div>
           </div>
 
           <div style={{ padding: '30px 10%', display: 'flex', gap: '30px', alignItems: 'flex-start' }}>
@@ -526,7 +676,7 @@ function App() {
                 <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}><strong>EMI</strong> starts at ₹{(selectedProduct.price / 12).toFixed(0)}. No Cost EMI available.</p>
               </div>
 
-              {/* VARIANTS (Dynamic based on Category) */}
+              {/* VARIANTS */}
               <div>
                 <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>Colour:</strong> {mockColors[selectedColor]}</p>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -549,7 +699,6 @@ function App() {
                 </div>
               )}
 
-              {/* BULLET POINTS */}
               <div style={{ marginTop: '10px' }}>
                 <h3 style={{ fontSize: '16px', margin: '0 0 10px 0' }}>About this item</h3>
                 <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px', color: '#334155' }}>
@@ -659,7 +808,7 @@ function App() {
         </div>
       )}
 
-      {/* MODALS (CART & AUTH) - Kept mostly intact from previous robust version */}
+      {/* MODALS */}
       {showCartModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
