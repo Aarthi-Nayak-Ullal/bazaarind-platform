@@ -37,7 +37,7 @@ function App() {
   // ADMIN STATE CONTROLS
   const [adminForm, setAdminForm] = useState({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' })
   const [isEditing, setIsEditing] = useState(false)
-  const [adminSearchQuery, setAdminSearchQuery] = useState('') // New state for admin search
+  const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
   // Rotating Billboard Dashboard Cover Arrays
   const [activeBanner, setActiveBanner] = useState(0)
@@ -145,7 +145,6 @@ function App() {
     if (savedAdminStatus === 'true' && !isIframe) {
       setIsAdmin(true);
       setUser({ name: 'Admin', email: 'aarthinayaku@gmail.com' });
-      // Removed automatic redirect to 'admin' to let standard tab routing handle it.
     } else if (savedUser) {
       setUser(JSON.parse(savedUser))
     } else if (!isIframe) {
@@ -335,8 +334,8 @@ function App() {
         </div>
       </nav>
 
-      {/* Category Icons Bar */}
-      {currentView !== 'admin' && (
+      {/* Category Icons Bar - Now exclusively shown on HOME */}
+      {currentView === 'home' && (
         <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto' }}>
           {categoryIcons.map(cat => {
             const isActive = selectedCategory === cat.name && (currentView === 'catalog' || currentView === 'product-detail');
@@ -368,7 +367,6 @@ function App() {
               
               <div>
                 <input type="text" placeholder="Custom Image URL (Leave blank for default system image)" value={adminForm.imageUrl} onChange={e => setAdminForm({...adminForm, imageUrl: e.target.value})} style={{ width: '100%', boxSizing: 'border-box', padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-                {/* Exposed Image URL for clarity during edits */}
                 <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: theme.textSecondary, wordBreak: 'break-all' }}>
                   <strong>Resolved URL: </strong> 
                   {adminForm.imageUrl || resolvePristineProductImage(adminForm.name || "Default", adminForm.category)}
@@ -386,7 +384,6 @@ function App() {
           <div style={{ width: '60%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h3 style={{ margin: 0 }}>Active Registry Nodes ({products.length})</h3>
-              {/* Added Search Bar for editing ease */}
               <input 
                 type="text" 
                 placeholder="Search products to edit..." 
@@ -455,6 +452,12 @@ function App() {
 
       {currentView === 'catalog' && (
         <main style={{ padding: '30px 10%' }}>
+          {/* Explicit Back Button for Catalog - Bringing category bar back */}
+          <button onClick={() => { setCurrentView('home'); setSelectedCategory('All'); }} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '20px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back to Home
+          </button>
+          
           <h2 style={{ fontSize: '20px', color: theme.textPrimary, marginBottom: '2px' }}>{selectedCategory.toUpperCase()} REGISTRY INDEX</h2>
           <p style={{ margin: '0 0 25px 0', fontSize: '12px', color: theme.textSecondary }}>Resolved Node Count Capacity: {filteredProducts.length} entries streaming live</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px' }}>
@@ -583,58 +586,65 @@ function App() {
       )}
 
       {currentView === 'checkout' && (
-        <div style={{ padding: '30px 10%', display: 'flex', gap: '30px' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', gap: '25px', fontWeight: 'bold', fontSize: '12px' }}>
-              <span style={{ color: checkoutStep === 1 ? theme.accent : theme.textSecondary }}>① DESTINATION SHIPPING</span>
-              <span style={{ color: theme.border }}>➔</span>
-              <span style={{ color: checkoutStep === 2 ? theme.accent : theme.textSecondary }}>② PAYMENT VALIDATION BUS</span>
+        <div style={{ padding: '20px 10%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Top Level Back Button added for Checkout screen */}
+          <button onClick={() => setCurrentView('catalog')} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', width: 'fit-content' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back to Catalog
+          </button>
+
+          <div style={{ display: 'flex', gap: '30px' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ backgroundColor: theme.panel, padding: '16px', borderRadius: '4px', border: `1px solid ${theme.border}`, display: 'flex', gap: '25px', fontWeight: 'bold', fontSize: '12px' }}>
+                <span style={{ color: checkoutStep === 1 ? theme.accent : theme.textSecondary }}>① DESTINATION SHIPPING</span>
+                <span style={{ color: theme.border }}>➔</span>
+                <span style={{ color: checkoutStep === 2 ? theme.accent : theme.textSecondary }}>② PAYMENT VALIDATION BUS</span>
+              </div>
+
+              {checkoutStep === 1 ? (
+                <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
+                  <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Specify Target Shipping Vectors</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    {['fullName', 'phone', 'pinCode', 'localAddress', 'city', 'state'].map(field => (
+                      <input key={field} type="text" placeholder={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={shippingAddress[field]} onChange={(e) => setShippingAddress({...shippingAddress, [field]: e.target.value})} style={{ padding: '12px', backgroundColor: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.textPrimary, outline: 'none' }} />
+                    ))}
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '25px' }}>
+                    <button onClick={() => setCurrentView('catalog')} style={{ padding: '12px 25px', backgroundColor: 'transparent', color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>BACK TO SHOPPING</button>
+                    <button onClick={() => setCheckoutStep(2)} style={{ padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE PARAMETERS</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
+                  <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Select Payment Network Node</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {['BHIM / GooglePay UPI Network', 'Credit or Debit Card Gateway', 'Cash on Delivery (COD)'].map(method => (
+                      <label key={method} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', backgroundColor: paymentMethod === method ? 'rgba(249,115,22,0.1)' : theme.bg, borderColor: paymentMethod === method ? theme.accent : theme.border }}>
+                        <input type="radio" checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} style={{ accentColor: theme.accent }} />
+                        <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{method}</span>
+                      </label>
+                    ))}
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
+                    <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK TO ADDRESS</button>
+                    <button onClick={() => { setCart([]); setCurrentView('order-success'); }} style={{ padding: '12px 35px', backgroundColor: theme.action, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>EXECUTE TRANSACTION</button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {checkoutStep === 1 ? (
-              <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Specify Target Shipping Vectors</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {['fullName', 'phone', 'pinCode', 'localAddress', 'city', 'state'].map(field => (
-                    <input key={field} type="text" placeholder={field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={shippingAddress[field]} onChange={(e) => setShippingAddress({...shippingAddress, [field]: e.target.value})} style={{ padding: '12px', backgroundColor: theme.bg, border: `1px solid ${theme.border}`, borderRadius: '4px', color: theme.textPrimary, outline: 'none' }} />
-                  ))}
-                </div>
-                
-                {/* Back Button explicitly added to Checkout Step 1 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '25px' }}>
-                  <button onClick={() => setCurrentView('catalog')} style={{ padding: '12px 25px', backgroundColor: 'transparent', color: theme.textSecondary, border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>BACK TO SHOPPING</button>
-                  <button onClick={() => setCheckoutStep(2)} style={{ padding: '12px 35px', backgroundColor: theme.accent, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>SAVE PARAMETERS</button>
-                </div>
+            <div style={{ width: '320px', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', height: 'fit-content', border: `1px solid ${theme.border}` }}>
+              <h4 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', color: theme.textSecondary, fontSize: '12px' }}>PRICE COMPILATION LOG</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', borderBottom: `1px dashed ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal Allocation</span><span>₹{calculateTotal().toLocaleString('en-IN')}</span></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0' }}><span>Network Shipping Bus</span><span style={{ color: theme.action }}>FREE</span></div>
               </div>
-            ) : (
-              <div style={{ backgroundColor: theme.panel, padding: '25px', borderRadius: '6px', border: `1px solid ${theme.border}` }}>
-                <h3 style={{ margin: '0 0 20px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>Select Payment Network Node</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {['BHIM / GooglePay UPI Network', 'Credit or Debit Card Gateway', 'Cash on Delivery (COD)'].map(method => (
-                    <label key={method} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', backgroundColor: paymentMethod === method ? 'rgba(249,115,22,0.1)' : theme.bg, borderColor: paymentMethod === method ? theme.accent : theme.border }}>
-                      <input type="radio" checked={paymentMethod === method} onChange={() => setPaymentMethod(method)} style={{ accentColor: theme.accent }} />
-                      <span style={{ fontSize: '14px', fontWeight: 'bold' }}>{method}</span>
-                    </label>
-                  ))}
-                </div>
-                
-                {/* Back Button explicitly returning to Step 1 */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '30px' }}>
-                  <button onClick={() => setCheckoutStep(1)} style={{ padding: '10px 20px', backgroundColor: 'transparent', border: `1px solid ${theme.border}`, color: theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', borderRadius: '4px' }}>BACK TO ADDRESS</button>
-                  <button onClick={() => { setCart([]); setCurrentView('order-success'); }} style={{ padding: '12px 35px', backgroundColor: theme.action, color: theme.textPrimary, border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}>EXECUTE TRANSACTION</button>
-                </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '16px' }}>
+                <span>Total Bill:</span><span style={{ color: theme.accent }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
               </div>
-            )}
-          </div>
-
-          <div style={{ width: '320px', backgroundColor: theme.panel, padding: '20px', borderRadius: '6px', height: 'fit-content', border: `1px solid ${theme.border}` }}>
-            <h4 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px', color: theme.textSecondary, fontSize: '12px' }}>PRICE COMPILATION LOG</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px', borderBottom: `1px dashed ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal Allocation</span><span>₹{calculateTotal().toLocaleString('en-IN')}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0' }}><span>Network Shipping Bus</span><span style={{ color: theme.action }}>FREE</span></div>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '16px' }}>
-              <span>Total Bill:</span><span style={{ color: theme.accent }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
             </div>
           </div>
         </div>
@@ -664,7 +674,6 @@ function App() {
               <div style={{ textAlign: 'center', padding: '60px 0', color: theme.textSecondary, flex: 1 }}>
                 <span style={{ fontSize: '50px' }}>🛒</span>
                 <p style={{ fontWeight: 'bold', marginTop: '15px' }}>Your Shopping Cart is empty.</p>
-                {/* Explicit Back Button when Cart is Empty */}
                 <button onClick={() => { setShowCartModal(false); setCurrentView('catalog'); }} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: 'transparent', color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Back to Catalog</button>
               </div>
             ) : (
@@ -694,7 +703,6 @@ function App() {
                     <span>Total Amount:</span><span style={{ color: theme.action, fontSize: '20px' }}>₹{calculateTotal().toLocaleString('en-IN')}</span>
                   </div>
                   
-                  {/* Explicit Back Button in populated cart alongside Checkout */}
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <button onClick={() => setShowCartModal(false)} style={{ flex: 1, backgroundColor: 'transparent', color: theme.textPrimary, padding: '14px', border: `1px solid ${theme.border}`, borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>BACK</button>
                     <button onClick={triggerCheckoutPipeline} style={{ flex: 2, backgroundColor: theme.accent, color: theme.textPrimary, padding: '14px', border: 'none', borderRadius: '4px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer' }}>PLACE ORDER</button>
