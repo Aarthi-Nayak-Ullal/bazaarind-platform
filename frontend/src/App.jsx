@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 
 // --- STATIC DATA & HELPERS MOVED OUTSIDE COMPONENT FOR PERFORMANCE ---
-// Added safe string parsing to prevent crashes if text is undefined
 const createSlug = (text) => {
   if (!text) return '';
   return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -27,6 +26,9 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   const [cart, setCart] = useState([])
+  
+  // Rotating Billboard Dashboard Cover Arrays (RESTORED)
+  const [activeBanner, setActiveBanner] = useState(0)
   
   // PRODUCT DETAIL PAGE STATE TRACKERS
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -736,7 +738,7 @@ function App() {
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
           <div style={{ backgroundColor: theme.panel, width: '440px', height: '100%', padding: '25px', display: 'flex', flexDirection: 'column', borderLeft: `1px solid ${theme.border}`, boxShadow: '-10px 0 25px -5px rgba(0,0,0,0.5)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}`, paddingBottom: '15px', marginBottom: '15px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
+              <h2 style={{ margin: '0 0 18px', fontSize: '18px', color: theme.textPrimary }}>My Cart</h2>
               <button onClick={() => setShowCartModal(false)} style={{ border: 'none', background: 'none', fontSize: '24px', cursor: 'pointer', color: theme.textSecondary }}>✕</button>
             </div>
             
