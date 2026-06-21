@@ -26,6 +26,144 @@ const categoryBanners = {
   ]
 };
 
+// --- PRODUCT DESCRIPTION ENGINE ---
+const descriptionTemplates = {
+  Electronics: {
+    Smartphone: [
+      "Experience powerful performance with the latest processor and advanced smartphone technology.",
+      "Capture stunning photos and videos with a high-resolution camera system.",
+      "Enjoy immersive entertainment on a vibrant display with sharp visuals.",
+      "Long-lasting battery life keeps you connected throughout the day."
+    ],
+    Laptop: [
+      "Designed for productivity, entertainment, and multitasking.",
+      "Powerful processor delivers smooth and responsive performance.",
+      "Lightweight and portable design for professionals and students.",
+      "Crisp display ensures an exceptional viewing experience."
+    ],
+    Headphones: [
+      "Rich audio quality with deep bass and crystal-clear sound.",
+      "Comfortable design suitable for extended listening sessions.",
+      "Long battery backup for uninterrupted entertainment.",
+      "Perfect for music, gaming, and professional calls."
+    ],
+    Smartwatch: [
+      "Track fitness, sleep, and health metrics with ease.",
+      "Stylish design suitable for every occasion.",
+      "Smart notifications keep you connected on the go.",
+      "Water-resistant construction for daily use."
+    ],
+    Mouse: [
+      "Ergonomic design for comfortable all-day navigation.",
+      "High-precision sensor for smooth and accurate tracking.",
+      "Durable build quality tested for millions of clicks.",
+      "Plug-and-play connectivity for instant setup."
+    ],
+    Keyboard: [
+      "Tactile keys provide a satisfying typing experience.",
+      "Ergonomic layout reduces strain during long sessions.",
+      "Durable construction built to withstand heavy daily use.",
+      "Spill-resistant design for peace of mind."
+    ]
+  },
+  "Home & Kitchen": {
+    MixerGrinder: [
+      "Powerful motor handles grinding and blending efficiently.",
+      "Durable construction designed for long-term usage.",
+      "Multiple speed settings provide greater control.",
+      "Easy-to-clean design saves valuable time."
+    ],
+    AirFryer: [
+      "Prepare healthier meals using minimal oil.",
+      "Rapid air circulation ensures even cooking.",
+      "User-friendly controls simplify meal preparation.",
+      "Modern design complements any kitchen."
+    ],
+    Cookware: [
+      "Premium materials ensure excellent heat distribution.",
+      "Durable construction withstands everyday cooking.",
+      "Easy maintenance and cleaning.",
+      "Suitable for various cooking styles."
+    ]
+  },
+  Groceries: {
+    Rice: [
+      "Premium quality grains selected for superior taste.",
+      "Naturally processed to retain nutritional value.",
+      "Ideal for everyday meals and special occasions.",
+      "Packed hygienically to maintain freshness."
+    ],
+    Tea: [
+      "Rich aroma and refreshing flavor in every cup.",
+      "Carefully selected ingredients ensure consistent quality.",
+      "Perfect companion for your daily routine.",
+      "Freshness-sealed packaging preserves taste."
+    ],
+    Coffee: [
+      "Bold flavor profile crafted for coffee lovers.",
+      "Expertly roasted beans deliver exceptional aroma.",
+      "Smooth and satisfying taste experience.",
+      "Freshly packed to retain maximum freshness."
+    ]
+  },
+  Apparel: {
+    Tshirt: [
+      "Soft fabric ensures all-day comfort.",
+      "Modern fit complements every style.",
+      "Breathable material suitable for daily wear.",
+      "Designed for durability and long-lasting use."
+    ],
+    Jeans: [
+      "Premium denim provides exceptional comfort.",
+      "Stylish fit suitable for multiple occasions.",
+      "Durable stitching enhances longevity.",
+      "Easy to pair with casual and formal outfits."
+    ]
+  },
+  "Fitness & Lifestyle": {
+    Dumbbell: [
+      "Ideal for strength training and fitness routines.",
+      "Durable construction ensures long-term performance.",
+      "Comfortable grip improves workout experience.",
+      "Suitable for beginners and advanced users."
+    ],
+    YogaMat: [
+      "Provides excellent grip and stability.",
+      "Comfortable cushioning supports workouts.",
+      "Lightweight and easy to carry.",
+      "Suitable for yoga, stretching, and fitness training."
+    ]
+  },
+  Footwear: {
+    RunningShoes: [
+      "Lightweight design enhances movement.",
+      "Comfortable cushioning reduces impact.",
+      "Breathable upper keeps feet fresh.",
+      "Durable sole provides reliable traction."
+    ],
+    CasualShoes: [
+      "Stylish appearance for everyday wear.",
+      "Comfortable fit for long hours.",
+      "Durable construction ensures longevity.",
+      "Versatile design suits various occasions."
+    ]
+  },
+  "Books & Stationery": {
+    Notebook: [
+      "High-quality pages provide smooth writing.",
+      "Strong binding improves durability.",
+      "Ideal for students and professionals.",
+      "Compact design makes it easy to carry."
+    ],
+    Pen: [
+      "Smooth ink flow for effortless writing.",
+      "Comfortable grip reduces hand fatigue.",
+      "Reliable performance for daily use.",
+      "Elegant design suitable for all users."
+    ]
+  }
+};
+
 function App() {
   const [currentView, setCurrentView] = useState('home')
   const [products, setProducts] = useState([])
@@ -129,6 +267,71 @@ function App() {
     if (category === "Electronics") return "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=600&q=80";
     if (category === "Apparel") return "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=600&q=80";
     return "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=600&q=80";
+  };
+
+  const getProductHighlights = (name, category, customDescription) => {
+    if (customDescription && customDescription.trim() !== '') {
+      return <p style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6', margin: 0 }}>{customDescription}</p>;
+    }
+
+    const lowerName = String(name || '').toLowerCase();
+    let subCategory = null;
+
+    // 1. Keyword mapping to find the right subCategory key
+    if (category === 'Electronics') {
+      if (lowerName.includes('phone') || lowerName.includes('mobile')) subCategory = 'Smartphone';
+      else if (lowerName.includes('laptop') || lowerName.includes('macbook')) subCategory = 'Laptop';
+      else if (lowerName.includes('headphone') || lowerName.includes('earbud') || lowerName.includes('tws')) subCategory = 'Headphones';
+      else if (lowerName.includes('watch') || lowerName.includes('band')) subCategory = 'Smartwatch';
+      else if (lowerName.includes('mouse')) subCategory = 'Mouse';
+      else if (lowerName.includes('keyboard')) subCategory = 'Keyboard';
+    } else if (category === 'Home & Kitchen') {
+      if (lowerName.includes('mixer') || lowerName.includes('grinder')) subCategory = 'MixerGrinder';
+      else if (lowerName.includes('fryer')) subCategory = 'AirFryer';
+      else if (lowerName.includes('pan') || lowerName.includes('cooker') || lowerName.includes('cooktop')) subCategory = 'Cookware';
+    } else if (category === 'Groceries') {
+      if (lowerName.includes('rice') || lowerName.includes('basmati')) subCategory = 'Rice';
+      else if (lowerName.includes('tea') || lowerName.includes('chai')) subCategory = 'Tea';
+      else if (lowerName.includes('coffee')) subCategory = 'Coffee';
+    } else if (category === 'Apparel') {
+      if (lowerName.includes('shirt')) subCategory = 'Tshirt';
+      else if (lowerName.includes('jeans') || lowerName.includes('denim')) subCategory = 'Jeans';
+    } else if (category === 'Fitness & Lifestyle') {
+      if (lowerName.includes('dumbbell') || lowerName.includes('weight')) subCategory = 'Dumbbell';
+      else if (lowerName.includes('mat')) subCategory = 'YogaMat';
+    } else if (category === 'Footwear') {
+      if (lowerName.includes('running') || lowerName.includes('sports')) subCategory = 'RunningShoes';
+      else if (lowerName.includes('shoe') || lowerName.includes('sneaker')) subCategory = 'CasualShoes';
+    } else if (category === 'Books & Stationery') {
+      if (lowerName.includes('notebook') || lowerName.includes('book') || lowerName.includes('paper')) subCategory = 'Notebook';
+      else if (lowerName.includes('pen') || lowerName.includes('pencil')) subCategory = 'Pen';
+    }
+
+    // 2. Fetch the specific features or use a smart fallback
+    const categoryTemplates = descriptionTemplates[category] || {};
+    const featuresList = categoryTemplates[subCategory] || [
+      "Premium quality product designed for everyday use.",
+      "Built with strict attention to quality and long-lasting durability.",
+      "Offers excellent value and consistent performance.",
+      "A reliable choice designed for modern lifestyles."
+    ];
+
+    // 3. Render the output dynamically
+    return (
+      <div style={{ color: '#475569', fontSize: '14px' }}>
+        <ul style={{ paddingLeft: '20px', margin: '0 0 15px 0' }}>
+          {featuresList.map((item, index) => (
+            <li key={index} style={{ marginBottom: '8px' }}>{item}</li>
+          ))}
+        </ul>
+        <strong style={{ color: '#0f172a', display: 'block', marginBottom: '8px' }}>Why Choose This Product?</strong>
+        <ul style={{ paddingLeft: '20px', margin: 0 }}>
+          <li style={{ marginBottom: '4px' }}>Trusted quality and performance</li>
+          <li style={{ marginBottom: '4px' }}>Excellent value for money</li>
+          <li style={{ marginBottom: '4px' }}>Designed for everyday convenience</li>
+        </ul>
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -537,14 +740,38 @@ function App() {
                   {mockColors.map((color, idx) => ( <div key={idx} onClick={() => setSelectedColor(idx)} style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: idx === 0 ? '#1e293b' : '#94a3b8', border: selectedColor === idx ? '3px solid #3b82f6' : '1px solid #cbd5e1', cursor: 'pointer', padding: '2px', backgroundClip: 'content-box' }} title={color} /> ))}
                 </div>
               </div>
-              {(selectedProduct.category === 'Electronics' || selectedProduct.category === 'Apparel') && (
+
+              {/* APPAREL SIZES */}
+              {selectedProduct.category === 'Apparel' && (
                 <div>
-                  <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>{selectedProduct.category === 'Electronics' ? 'Size Name:' : 'Size:'}</strong></p>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>Size:</strong></p>
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                    {(selectedProduct.category === 'Electronics' ? mockStorageVariants : mockSizeVariants).map((v, idx) => ( <div key={idx} onClick={() => setSelectedVariant(idx)} style={{ padding: '8px 16px', border: selectedVariant === idx ? '2px solid #ea580c' : '1px solid #cbd5e1', backgroundColor: selectedVariant === idx ? '#fff7ed' : '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: selectedVariant === idx ? '600' : '400', color: '#0f172a' }}>{v}</div> ))}
+                    {mockSizeVariants.map((v, idx) => ( <div key={idx} onClick={() => setSelectedVariant(idx)} style={{ padding: '8px 16px', border: selectedVariant === idx ? '2px solid #ea580c' : '1px solid #cbd5e1', backgroundColor: selectedVariant === idx ? '#fff7ed' : '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: selectedVariant === idx ? '600' : '400', color: '#0f172a' }}>{v}</div> ))}
                   </div>
                 </div>
               )}
+
+              {/* ELECTRONICS CONFIGURATIONS (Only show for smart devices) */}
+              {selectedProduct.category === 'Electronics' && 
+                (String(selectedProduct.name || '').toLowerCase().includes('phone') || 
+                 String(selectedProduct.name || '').toLowerCase().includes('mobile') || 
+                 String(selectedProduct.name || '').toLowerCase().includes('laptop') || 
+                 String(selectedProduct.name || '').toLowerCase().includes('macbook') || 
+                 String(selectedProduct.name || '').toLowerCase().includes('tablet')) && (
+                <div>
+                  <p style={{ margin: '0 0 10px 0', fontSize: '14px' }}><strong>Configuration:</strong></p>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {mockStorageVariants.map((v, idx) => ( <div key={idx} onClick={() => setSelectedVariant(idx)} style={{ padding: '8px 16px', border: selectedVariant === idx ? '2px solid #ea580c' : '1px solid #cbd5e1', backgroundColor: selectedVariant === idx ? '#fff7ed' : '#fff', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: selectedVariant === idx ? '600' : '400', color: '#0f172a' }}>{v}</div> ))}
+                  </div>
+                </div>
+              )}
+
+              {/* PRODUCT HIGHLIGHTS SECTION */}
+              <div style={{ borderTop: '1px solid #e2e8f0', padding: '20px 0', marginTop: '10px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a', margin: '0 0 15px 0' }}>Product Highlights</h3>
+                {getProductHighlights(selectedProduct.name, selectedProduct.category, selectedProduct.description)}
+              </div>
+
             </div>
             <div style={{ width: '25%', backgroundColor: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '20px', position: 'sticky', top: '100px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
                <div style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', marginBottom: '15px' }}>₹{selectedProduct.price ? selectedProduct.price.toLocaleString('en-IN') : 0}</div>
