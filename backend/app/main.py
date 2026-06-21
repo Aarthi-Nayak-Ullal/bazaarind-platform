@@ -7,7 +7,7 @@ import httpx
 import json
 from datetime import datetime
 
-# Import DB and Redis clients
+# Import DB and Redis clients from your database.py file
 from app.database import product_collection, user_collection, redis_client
 
 app = FastAPI(title="BazaarInd Production API Gateway Engine")
@@ -40,6 +40,10 @@ class ProductSchema(BaseModel):
 
 # ⚡ ASYNC BACKGROUND WORKER
 async def resolve_and_cache_image(product_id: str, product_name: str):
+    """
+    Background worker that queries a live open visual search engine using the exact 
+    product name, grabs a distinct studio asset, and updates the MongoDB cloud record.
+    """
     try:
         search_query = product_name.split("(")[0].strip()
         async with httpx.AsyncClient() as client:
@@ -90,7 +94,7 @@ async def get_products(background_tasks: BackgroundTasks):
             if "unsplash.com" in product.get("image_url", "") and "fit=crop" not in product.get("image_url", ""):
                 background_tasks.add_task(resolve_and_cache_image, product["id"], product["name"])
 
-        # 3. POPULATE REDIS CACHE (Set expiration to 1 hour)
+        # 3. POPULATE REDIS CACHE (Set expiration to 1 hour = 3600 seconds)
         await redis_client.setex("active_products", 3600, json.dumps(products_list))
                 
         return products_list
@@ -113,7 +117,6 @@ async def add_product(product: ProductSchema):
     new_product["version"] = 1
     new_product["isLatest"] = True
     new_product["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    # Will assign product_group_id after creation to match its own _id
     
     result = await product_collection.insert_one(new_product)
     
@@ -128,45 +131,54 @@ async def add_product(product: ProductSchema):
     
     return {"status": "success", "id": str(result.inserted_id)}
 
-# Update Existing Product (PUT) - CREATES NEW VERSION
+# Update Existing Product (PUT) - CREATES NEW VERSION (Race-Condition Proof)
 @app.put('/api/products/{id}')
 async def update_product(id: str, product: ProductSchema):
-    # 1. Find the old version
+    # 1. Find the target product to get its group_id
     old_product = await product_collection.find_one({"_id": ObjectId(id)})
     if not old_product:
         raise HTTPException(status_code=404, detail="Product not found")
 
-    # 2. Demote the old version (Soft Archive)
-    await product_collection.update_one(
-        {"_id": ObjectId(id)}, 
+    group_id = old_product.get("product_group_id", str(old_product["_id"]))
+
+    # 2. BULLETPROOFING: Find the ACTUAL highest version currently in this group
+    latest_in_group = await product_collection.find_one(
+        {"product_group_id": group_id},
+        sort=[("version", -1)]  # Sort descending to get the absolute highest number
+    )
+    highest_version = latest_in_group.get("version", 1) if latest_in_group else 1
+
+    # 3. Demote ALL versions in this group (Ensure no duplicate "Actives")
+    await product_collection.update_many(
+        {"product_group_id": group_id}, 
         {"$set": {"isLatest": False}}
     )
 
-    # 3. Create the new version
+    # 4. Create the new version
     new_version_data = product.dict()
     if "imageUrl" in new_version_data:
         new_version_data["image_url"] = new_version_data.pop("imageUrl")
 
-    # Inherit group ID and increment version
-    group_id = old_product.get("product_group_id", str(old_product["_id"]))
-    current_version = old_product.get("version", 1)
-
     new_version_data["product_group_id"] = group_id
-    new_version_data["version"] = current_version + 1
+    new_version_data["version"] = highest_version + 1  # Safely increment
     new_version_data["isLatest"] = True
     new_version_data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    await product_collection.insert_one(new_version_data)
+    insert_result = await product_collection.insert_one(new_version_data)
     
     # 💥 INVALIDATE CACHE
     await redis_client.delete("active_products")
     
-    return {"status": "Product updated, new version created"}
+    # RETURN THE NEW ID so the frontend can update its state seamlessly
+    return {
+        "status": "Product updated, new version created", 
+        "id": str(insert_result.inserted_id)
+    }
 
 # Delete Existing Product (DELETE)
 @app.delete('/api/products/{id}')
 async def remove_product(id: str):
-    # Standard hard delete (or you could switch this to isLatest = False for everything in the group)
+    # Hard delete the specific product record
     await product_collection.delete_one({"_id": ObjectId(id)})
     
     # 💥 INVALIDATE CACHE
@@ -176,7 +188,7 @@ async def remove_product(id: str):
 
 
 # ==========================================
-# 📜 NEW: AUDIT HISTORY ENDPOINT
+# 📜 AUDIT HISTORY ENDPOINT
 # ==========================================
 @app.get('/api/products/{id}/history')
 async def get_product_history(id: str):
@@ -215,14 +227,19 @@ async def get_product_history(id: str):
 
 
 # ==========================================
-# 🔐 USER AUTH ROUTING (Unchanged)
+# 🔐 USER AUTH ROUTING
 # ==========================================
 @app.post("/api/register")
 async def register_user(user_data: UserRegisterSchema):
     existing_entity = await user_collection.find_one({"email": user_data.email})
     if existing_entity:
         raise HTTPException(status_code=400, detail="Identity already exists.")
-    user_payload = {"name": user_data.name, "email": user_data.email, "password": user_data.password}
+    
+    user_payload = {
+        "name": user_data.name, 
+        "email": user_data.email, 
+        "password": user_data.password
+    }
     await user_collection.insert_one(user_payload)
     return {"user": {"name": user_data.name, "email": user_data.email}}
 
@@ -234,4 +251,5 @@ async def login_user(login_credentials: UserLoginSchema):
     })
     if not authenticated_user:
         raise HTTPException(status_code=401, detail="Invalid credentials.")
+    
     return {"user": {"name": authenticated_user["name"], "email": authenticated_user["email"]}}
