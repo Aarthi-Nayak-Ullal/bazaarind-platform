@@ -65,7 +65,7 @@ function App() {
   const [isEditing, setIsEditing] = useState(false)
   const [adminSearchQuery, setAdminSearchQuery] = useState('')
 
-  // NEW: AUDIT HISTORY STATE
+  // AUDIT HISTORY STATE
   const [historyModal, setHistoryModal] = useState({ isOpen: false, productName: '', history: [], isLoading: false });
 
   useEffect(() => {
@@ -217,10 +217,16 @@ function App() {
       const savedData = await response.json();
       
       if (isEditing) {
-        setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...payload } : p));
+        // Capture the newly generated ID to prevent desync bugs
+        const newId = savedData.id || adminForm.id;
+        // Ensure image_url is also patched back into the local state so it doesn't break future edits
+        const updatedLocalData = { ...payload, image_url: payload.imageUrl };
+        
+        setProducts(products.map(p => p.id === adminForm.id ? { ...p, ...updatedLocalData, id: newId } : p));
         alert("Success: Product updated and version history recorded!");
       } else {
-        setProducts([...products, { ...payload, id: savedData.id || savedData._id || Math.random().toString() }]);
+        const newLocalData = { ...payload, image_url: payload.imageUrl };
+        setProducts([...products, { ...newLocalData, id: savedData.id || savedData._id || Math.random().toString() }]);
         alert("Success: New product added!");
       }
       setAdminForm({ id: '', name: '', category: 'Electronics', price: '', offer: '', imageUrl: '' }); setIsEditing(false);
@@ -228,7 +234,16 @@ function App() {
   };
 
   const handleEditClick = (product) => {
-    setIsEditing(true); setAdminForm({ id: product.id, name: product.name || '', category: product.category, price: product.price, offer: product.offer || '', imageUrl: product.imageUrl || '' });
+    setIsEditing(true); 
+    setAdminForm({ 
+      id: product.id, 
+      name: product.name || '', 
+      category: product.category, 
+      price: product.price, 
+      offer: product.offer || '', 
+      // Map both properties to ensure it catches data from the DB or recent local edits
+      imageUrl: product.image_url || product.imageUrl || '' 
+    });
   };
   
   const removeProduct = async (id) => {
@@ -241,7 +256,7 @@ function App() {
     }
   };
 
-  // NEW: FETCH PRODUCT VERSION HISTORY
+  // FETCH PRODUCT VERSION HISTORY
   const viewProductHistory = async (product) => {
     setHistoryModal({ isOpen: true, productName: product.name, history: [], isLoading: true });
     try {
@@ -334,8 +349,8 @@ function App() {
         </div>
       </nav>
 
-      {/* CATEGORY NAV */}
-      {(currentView === 'home' || currentView === 'catalog') && (
+      {/* CATEGORY NAV (VISIBLE ONLY ON HOME) */}
+      {currentView === 'home' && (
         <div style={{ backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', gap: '45px', padding: '14px 0', borderBottom: `1px solid ${theme.border}`, overflowX: 'auto', position: 'relative', zIndex: 10 }}>
           {categoryIcons.map(cat => {
             const isActive = selectedCategory === cat.name;
@@ -350,8 +365,8 @@ function App() {
         </div>
       )}
 
-      {/* DYNAMIC PROMO BANNERS */}
-      {(currentView === 'home' || currentView === 'catalog') && (
+      {/* DYNAMIC PROMO BANNERS (VISIBLE ONLY ON HOME) */}
+      {currentView === 'home' && (
         <div style={{ width: '100%', overflow: 'hidden', position: 'relative', height: '320px', backgroundColor: '#000' }}>
           <div style={{ display: 'flex', width: `${currentBanners.length * 100}%`, height: '100%', transform: `translateX(-${activeBanner * (100 / currentBanners.length)}%)`, transition: 'transform 0.7s cubic-bezier(0.25, 1, 0.5, 1)' }}>
             {currentBanners.map((banner, index) => (
@@ -381,7 +396,7 @@ function App() {
             <h3 style={{ margin: '0 0 15px 0', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>{isEditing ? `Edit Product` : 'Add New Product'}</h3>
             <form onSubmit={handleAdminSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
               <input required type="text" placeholder="Product Title" value={adminForm.name} onChange={e => setAdminForm({...adminForm, name: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
-              <select value={adminForm.category} onChange={e => setAdminForm({...adminForm, category: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }}>
+              <select value={adminForm.category} onChange={e => setAdminForm({...adminForm, category: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} >
                 {categoryIcons.filter(c => c.name !== 'All').map(cat => (<option key={cat.name} value={cat.name}>{cat.name}</option>))}
               </select>
               <input required type="number" placeholder="Price (₹)" value={adminForm.price} onChange={e => setAdminForm({...adminForm, price: e.target.value})} style={{ padding: '10px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px' }} />
@@ -403,14 +418,14 @@ function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {products.filter(p => String(p.name || '').toLowerCase().includes(adminSearchQuery.toLowerCase())).map(product => (
                 <div key={product.id} style={{ display: 'flex', gap: '15px', padding: '15px', border: `1px solid ${theme.border}`, borderRadius: '6px', backgroundColor: theme.panel, alignItems: 'center' }}>
-                  <img src={resolvePristineProductImage(product.name, product.category, product.imageUrl)} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
+                  <img src={resolvePristineProductImage(product.name, product.category, product.image_url || product.imageUrl)} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontWeight: 'bold', fontSize: '14px', display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</span>
                     <span style={{ color: theme.accent, fontSize: '12px', fontWeight: 'bold' }}>₹{product.price}</span> | <span style={{ color: theme.textSecondary, fontSize: '11px' }}>{product.category}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => handleEditClick(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: theme.textPrimary, border: `1px solid ${theme.border}`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Edit</button>
-                    {/* NEW HISTORY BUTTON */}
+                    {/* HISTORY BUTTON */}
                     <button onClick={() => viewProductHistory(product)} style={{ padding: '8px 12px', backgroundColor: theme.bg, color: '#3b82f6', border: `1px solid #3b82f6`, borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>History</button>
                     <button onClick={() => removeProduct(product.id)} style={{ padding: '8px 12px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Delete</button>
                   </div>
@@ -424,6 +439,14 @@ function App() {
       {/* HOME / CATALOG SHARED GRID */}
       {(currentView === 'home' || currentView === 'catalog') && (
         <main style={{ padding: '40px 10%' }}>
+          
+          {/* CATALOG BACK BUTTON (VISIBLE ONLY IN CATALOG VIEW) */}
+          {currentView === 'catalog' && (
+            <button onClick={() => { setCurrentView('home'); setSelectedCategory('All'); }} style={{ background: 'none', border: 'none', color: '#2874F0', cursor: 'pointer', fontSize: '14px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px', padding: '0', marginBottom: '20px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back to Home
+            </button>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
             <div>
               <h2 style={{ fontSize: '22px', color: theme.textPrimary, margin: '0 0 5px 0' }}>
@@ -437,7 +460,7 @@ function App() {
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '25px' }}>
             {(currentView === 'home' ? products.slice(0, 8) : filteredProducts.slice(0, displayLimit)).map(product => {
-              const accurateImg = resolvePristineProductImage(product.name, product.category, product.imageUrl);
+              const accurateImg = resolvePristineProductImage(product.name, product.category, product.image_url || product.imageUrl);
               return (
                 <div key={product.id} onClick={() => { setSelectedProduct(product); setCurrentView('product-detail'); }} style={{ backgroundColor: theme.panel, padding: '0', borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', cursor: 'pointer', overflow: 'hidden', transition: 'transform 0.2s, box-shadow 0.2s' }} onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(0,0,0,0.2)'; }} onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
                   <div style={{ width: '100%', height: '180px', backgroundColor: '#fff', display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
@@ -488,12 +511,12 @@ function App() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '60px' }}>
                 {[1, 2, 3, 4].map((idx, index) => (
                   <div key={idx} onMouseEnter={() => setActiveImageIndex(index)} style={{ width: '60px', height: '60px', border: activeImageIndex === index ? '2px solid #2563eb' : '1px solid #e2e8f0', borderRadius: '4px', padding: '4px', cursor: 'pointer', backgroundColor: '#fff' }}>
-                    <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={`View ${idx}`} />
+                    <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.image_url || selectedProduct.imageUrl)} style={{ width: '100%', height: '100%', objectFit: 'contain' }} alt={`View ${idx}`} />
                   </div>
                 ))}
               </div>
               <div style={{ flex: 1, backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '30px', height: '500px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt={selectedProduct.name} />
+                <img src={resolvePristineProductImage(selectedProduct.name, selectedProduct.category, selectedProduct.image_url || selectedProduct.imageUrl)} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} alt={selectedProduct.name} />
               </div>
             </div>
             <div style={{ width: '35%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -600,7 +623,7 @@ function App() {
       )}
 
       {/* MODALS */}
-      {/* HISTORY MODAL (NEW) */}
+      {/* HISTORY MODAL */}
       {historyModal.isOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
           <div style={{ backgroundColor: theme.panel, width: '600px', maxHeight: '80vh', borderRadius: '8px', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
@@ -661,7 +684,7 @@ function App() {
                 <div style={{ overflowY: 'auto', flex: 1, paddingRight: '5px' }}>
                   {cart.map((item) => (
                     <div key={item.id} style={{ display: 'flex', gap: '15px', alignItems: 'center', padding: '12px 0', borderBottom: `1px dashed ${theme.border}` }}>
-                      <img src={resolvePristineProductImage(item.name, item.category, item.imageUrl)} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
+                      <img src={resolvePristineProductImage(item.name, item.category, item.image_url || item.imageUrl)} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} alt="Thumb" />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
                         <span style={{ fontSize: '11px', color: theme.textSecondary }}>{item.category}</span>
